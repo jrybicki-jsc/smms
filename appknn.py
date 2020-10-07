@@ -2,6 +2,7 @@ import numpy as np
 from typing import Tuple, Sequence, Callable
 import random
 import itertools
+from collections import defaultdict
 
 
 def adf(apid1: int, apid2: int, funcs) -> float:
