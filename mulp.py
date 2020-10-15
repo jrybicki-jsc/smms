@@ -170,4 +170,4 @@ if __name__ == "__main__":
     #smp = mysample(v, sample_size)
     #funcs_smp = smp.groupby(by='apn')['nf'].apply(set)
 
-    make_and_merge(funcs=funcs_smp, labels=labels, gamma=4)
+    make_and_merge(funcs=funcs, labels=labels, gamma=4)
