@@ -83,24 +83,45 @@ def rr(x, gamma):
     #vot_net = convert_to_voting(net, labels)
     return net
 
+def mymerge(pair, gamma):
+    ((n1, p1), (n2, p2)) = pair
+    funcs = p1.append(p2)
+
+    print(f"Merging {len(funcs)}")
+    n = merge_voting_nets(nets=[n1, n2], distance=lambda x,y: adf(x,y, funcs), gamma=gamma)
+    return (dict(n), funcs)
+
 def make_and_merge(funcs, labels, gamma):
     myfc = partial(rr, gamma=gamma)
-    parts = partition_dataframe(funcs, 10)
+    parts = partition_dataframe(funcs, 16)
     with Pool() as p:
             networks = p.map(myfc, parts)
 
     print("Converting...")
     start = time.time()
-    voting_networks = [convert_to_voting(net, labels) for net in networks]
+    voting_networks = [dict(convert_to_voting(net, labels)) for net in networks]
     end = time.time()
     print(f"\tElapsed: {end-start}")
 
     print("Merging")
     start = time.time()
-    mv = merge_voting_nets(nets=voting_networks, distance=lambda x,y: adf(x,y, funcs), gamma=gamma)
+    
+    
+    nds = list(zip(voting_networks, parts))
+
+    part_merge = partial(mymerge, gamma=gamma)
+    while len(nds)>1:
+        print(f"Hierarchical merging {len(nds)}")
+        b = zip(nds[::2], nds[1::2])
+        with Pool() as p:
+            nds = p.map(part_merge,b)
+    #mv = merge_voting_nets(nets=voting_networks, distance=lambda x,y: adf(x,y, funcs), gamma=gamma)
     end = time.time()
     print(f"\tElapsed: {end-start}")
 
+def myf(x):
+    (a,b) = x
+    print(f"{a=}\n{b=}\n")
 
 def exp(funcs):
     res = dict()
@@ -149,4 +170,4 @@ if __name__ == "__main__":
     #smp = mysample(v, sample_size)
     #funcs_smp = smp.groupby(by='apn')['nf'].apply(set)
 
-    make_and_merge(funcs=funcs, labels=labels, gamma=4)
+    make_and_merge(funcs=funcs_smp, labels=labels, gamma=4)
