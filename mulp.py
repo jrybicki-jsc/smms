@@ -7,15 +7,16 @@ from tqdm import tqdm
 import pickle
 from functools import partial
 import time
+from sklearn.model_selection import train_test_split
 
 
 def save_nets(nets, name):
-    normal_nets = dict()
-    for gamma, [n1, n2] in nets.items():
-        normal_nets[gamma] = [dict(n1), dict(n2)]
+    #normal_nets = dict()
+    #for gamma, [n1, n2] in nets.items():
+    #    normal_nets[gamma] = [dict(n1), dict(n2)]
 
     with open(f"res/{name}.pickle", 'wb+') as f:
-        pickle.dump(normal_nets, f)
+        pickle.dump(nets, f)
 
 
 def partition_dataframe(df, n_parts):
@@ -76,11 +77,38 @@ def merge_voting_nets(nets, distance, gamma):
     
     return targ
 
+def classify_using_voting(app, net, distance, k=1):
+    ns = app_k_nearest(k=k, apps=net.keys(), new_app=app, distance=distance)
+
+    ret = [0, 0]
+    for n in ns:
+        ret = np.add(ret, net[n])
+    return ret
+
+def evaluate_voting_net(apns, net, distance, k=3):
+    fp = 0
+    fn = 0
+    for a in apns:
+        v1 = classify_using_voting(app=a, net=net, distance=distance, k=k)
+
+        gt = classify_app(a, labels)
+        rt = v1[0] < v1[1]
+        if gt!=rt:
+            if rt==True:
+                fp+=1
+            else:
+                fn+=1
+                
+    return fn, fp
+
 def rr(x, gamma):
-    print(f"Doing some work...{gamma=} {len(x)}")
+    start = time.time()
+    print(f"Creating agg network...{gamma=} {len(x)}")
     net = create_aggregating_net(
         gamma=gamma, apns=x.keys(), distance=lambda x1, y1: adf(x1, y1, x))
     #vot_net = convert_to_voting(net, labels)
+    end = time.time()
+    print(f"\tElapsed: {end-start}")
     return net
 
 def mymerge(pair, gamma):
@@ -93,7 +121,7 @@ def mymerge(pair, gamma):
 
 def make_and_merge(funcs, labels, gamma):
     myfc = partial(rr, gamma=gamma)
-    parts = partition_dataframe(funcs, 16)
+    parts = partition_dataframe(funcs, 8)
     with Pool() as p:
             networks = p.map(myfc, parts)
 
@@ -102,72 +130,76 @@ def make_and_merge(funcs, labels, gamma):
     voting_networks = [dict(convert_to_voting(net, labels)) for net in networks]
     end = time.time()
     print(f"\tElapsed: {end-start}")
+    
+    save_nets({gamma: voting_networks}, f"{gamma}-singlevoting")
+
 
     print("Merging")
     start = time.time()
     
     
-    nds = list(zip(voting_networks, parts))
+    #nds = list(zip(voting_networks, parts))
 
-    part_merge = partial(mymerge, gamma=gamma)
-    while len(nds)>1:
-        print(f"Hierarchical merging {len(nds)}")
-        b = zip(nds[::2], nds[1::2])
-        with Pool() as p:
-            nds = p.map(part_merge,b)
-    #mv = merge_voting_nets(nets=voting_networks, distance=lambda x,y: adf(x,y, funcs), gamma=gamma)
+    #part_merge = partial(mymerge, gamma=gamma)
+    #while len(nds)>1:
+    #    print(f"Hierarchical merging {len(nds)}")
+    #    b = zip(nds[::2], nds[1::2])
+    #    with Pool() as p:
+    #        nds = p.map(part_merge,b)
+    mv = merge_voting_nets(nets=voting_networks, distance=lambda x,y: adf(x,y, funcs), gamma=gamma)
     end = time.time()
     print(f"\tElapsed: {end-start}")
+    return mv
 
 def myf(x):
     (a,b) = x
     print(f"{a=}\n{b=}\n")
 
-def exp(funcs):
+def exp(funcs, test_size=10):
     res = dict()
-    res_ref = dict()
     nets = dict()
     gamma = 0
 
-    parts = partition_dataframe(funcs, 10)
+    #parts = partition_dataframe(funcs, 8)
+    train, test = train_test_split(funcs, test_size=test_size)
 
-
-    for gamma in tqdm([0, 1, 2, 4, 8, 16, 32, 64, 72, 80, 88, 96, 104, 110, 128, 164, 256]):
+    for gamma in tqdm([0, 1, 2, 4, 8, 16, 32, 64, 72, 80, 88, 96, 104, 110, 128, 164, 180, 192]):
         print(f"Current {gamma=}")
+        mv = make_and_merge(train, labels, gamma)
         
-            #[create_aggregating_net(gamma=gamma, apns=part, distance=distance) for part in partitions]
-        voting_networks = [convert_to_voting(net, labels) for net in networks]
-        mv = merge_voting_nets(nets=voting_networks, distance=distance, gamma=gamma)
-        
-        reference_netw = create_aggregating_net(gamma=gamma, apns=smp.apn.unique(), distance=lambda x,y: adf(x,y, funcs_smp))
-        reference_voting = convert_to_voting(reference_netw, labels)
+        #reference_netw = create_aggregating_net(gamma=gamma, apns=smp.apn.unique(), distance=lambda x,y: adf(x,y, funcs_smp))
+        #reference_voting = convert_to_voting(reference_netw, labels)
         
         #save the net
-        nets[gamma] = [mv.copy(), reference_voting.copy()]
-        false_negative, false_positives = evaluate_voting_net(apns=apns, net=mv)
+        #nets[gamma] = [mv.copy(), reference_voting.copy()]
+        false_negative, false_positives = evaluate_voting_net(apns=test.index, net=mv, distance=lambda x,y: adf(x,y, funcs))
         res[gamma] = [false_negative, false_positives]
         
-        false_negative, false_positives = evaluate_voting_net(apns=apns, net=reference_voting)
-        res_ref[gamma] = [false_negative, false_positives]
+        #false_negative, false_positives = evaluate_voting_net(apns=apns, net=reference_voting)
+        #res_ref[gamma] = [false_negative, false_positives]
         
+        nets[gamma] = [dict(mv)]
         if gamma ==0:
             gamma=1
         else:
             gamma*=2
         
-        print(f"Anchor points: {len(reference_voting.keys())}")
-        if len(reference_voting.keys()) == 1:
+        print(f"Anchor points: {len(mv.keys())}")
+        if len(mv.keys()) == 1:
             break
-            
-    save_nets(nets=nets, name=f"{sample_size}-votingnets")
-
+    
+    #save results:
+    save_nets(nets=nets, name=f"{len(train)}-votingnets")
+    merged = pd.DataFrame.from_dict(res, orient='index', columns=['fPos', 'fNeg'])
+    merged.to_csv(f"res/{len(train)}-mergedresults.csv")
+    
 if __name__ == "__main__":
     v = pd.read_csv('data/functions_encoded.csv')
     funcs = v.groupby(by='apn')['nf'].apply(set)
     labels = pd.read_csv('data/labels_encoded.csv')
 
-    #sample_size = 200
-    #smp = mysample(v, sample_size)
-    #funcs_smp = smp.groupby(by='apn')['nf'].apply(set)
+    sample_size = 500
+    smp = mysample(v, sample_size)
+    funcs_smp = smp.groupby(by='apn')['nf'].apply(set)
 
-    make_and_merge(funcs=funcs, labels=labels, gamma=4)
+    exp(funcs_smp, 50)
