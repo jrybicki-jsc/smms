@@ -20,7 +20,8 @@ def save_nets(nets, name):
 
 
 def partition_dataframe(df, n_parts):
-    permuted_indices = np.random.permutation(len(df))
+    rn = default_rng(42)
+    permuted_indices = rn.permutation(len(df))
 
     dfs = []
     for i in range(n_parts):
@@ -155,30 +156,33 @@ def myf(x):
     (a,b) = x
     print(f"{a=}\n{b=}\n")
 
-def exp(funcs, test_size=10):
+def exp(funcs, labels, test_size=10):
     res = dict()
+    res_ref = dict()
     nets = dict()
     gamma = 0
 
     #parts = partition_dataframe(funcs, 8)
-    train, test = train_test_split(funcs, test_size=test_size)
+    train, test = train_test_split(funcs, test_size=test_size, random_state=42)
 
     for gamma in tqdm([0, 1, 2, 4, 8, 16, 32, 64, 72, 80, 88, 96, 104, 110, 128, 164, 180, 192]):
         print(f"Current {gamma=}")
         mv = make_and_merge(train, labels, gamma)
         
-        #reference_netw = create_aggregating_net(gamma=gamma, apns=smp.apn.unique(), distance=lambda x,y: adf(x,y, funcs_smp))
-        #reference_voting = convert_to_voting(reference_netw, labels)
+        print("Creating and converting reference netwrok")
+        start = time.time()
+        reference_netw = create_aggregating_net(gamma=gamma, apns=train.index, distance=lambda x,y: adf(x,y, funcs))
+        reference_voting = convert_to_voting(reference_netw, labels)
+        end = time.time()
+        print(f"\tElapsed: {end-start}")
         
-        #save the net
-        #nets[gamma] = [mv.copy(), reference_voting.copy()]
         false_negative, false_positives = evaluate_voting_net(apns=test.index, net=mv, distance=lambda x,y: adf(x,y, funcs))
         res[gamma] = [false_negative, false_positives]
         
-        #false_negative, false_positives = evaluate_voting_net(apns=apns, net=reference_voting)
-        #res_ref[gamma] = [false_negative, false_positives]
+        false_negative, false_positives = evaluate_voting_net(apns=test.index, net=reference_voting, distance=lambda x,y: adf(x,y, funcs))
+        res_ref[gamma] = [false_negative, false_positives]
         
-        nets[gamma] = [dict(mv)]
+        nets[gamma] = [dict(mv), dict(reference_voting)]
         if gamma ==0:
             gamma=1
         else:
@@ -202,4 +206,4 @@ if __name__ == "__main__":
     smp = mysample(v, sample_size)
     funcs_smp = smp.groupby(by='apn')['nf'].apply(set)
 
-    exp(funcs_smp, 50)
+    exp(funcs_smp, labels, 50)
