@@ -3,7 +3,7 @@ from typing import Tuple, Sequence, Callable
 import random
 import itertools
 from collections import defaultdict
-
+from numpy.random import default_rng
 
 def adf(apid1: int, apid2: int, funcs) -> float:
     p1 = funcs[apid1]
@@ -87,14 +87,14 @@ def mysample(v, sample_size):
     # apns = v.apn.unique sample(sample_size, random_state=42)
     return v[v.apn.isin(r)][['apn', 'nf']]
 
-def partition_data(data: Sequence[int], partitions: int) -> Sequence[Sequence[int]]:
-    np.random.shuffle(data)
-    part_len = int(len(data)/partitions)
-    if part_len < 1:
-        print("Partition number to high")
-        return []
-        
-    return [data[i:i+part_len] for i in range(0, len(data), part_len)]
+def partition_dataframe(df, n_parts):
+    rn = default_rng(42)
+    permuted_indices = rn.permutation(len(df))
+
+    dfs = []
+    for i in range(n_parts):
+        dfs.append(df.iloc[permuted_indices[i::n_parts]])
+    return dfs
 
 def margins(v, labels, sample_size, problematic=[]):
     smp = mysample(v, sample_size)  # v.sample(sample_size, random_state=42)

@@ -11,7 +11,7 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 from appknn import (adf, app_k_nearest, create_aggregating_net, mysample,
-                    partition_data)
+                    partition_dataframe)
 
 
 def save_nets(nets, name):
@@ -21,16 +21,6 @@ def save_nets(nets, name):
 
     with open(f"res/{name}.pickle", 'wb+') as f:
         pickle.dump(nets, f)
-
-
-def partition_dataframe(df, n_parts):
-    rn = default_rng(42)
-    permuted_indices = rn.permutation(len(df))
-
-    dfs = []
-    for i in range(n_parts):
-        dfs.append(df.iloc[permuted_indices[i::n_parts]])
-    return dfs
 
 
 def find_closest(net, app, distance, k=1):
