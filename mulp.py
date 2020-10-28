@@ -86,7 +86,7 @@ def classify_using_voting(app, net, distance, k=1):
     return ret
 
 
-def evaluate_voting_net(apns, net, distance, k=3):
+def evaluate_voting_net(apns,labels, net, distance, k=3):
     fp = 0
     fn = 0
     for a in apns:
@@ -169,12 +169,15 @@ def exp(funcs, labels, test_size=10):
     gamma = 0
 
     train, test = train_test_split(funcs, test_size=test_size, random_state=42)
+    test.to_csv('/tmp/test.csv')
+    if 1==1:
+        return
 
     for gamma in tqdm([0, 1, 2, 4, 8, 16, 32, 64, 72, 80, 88, 96, 104, 110, 128, 164, 180, 192]):
         print(f"Current {gamma=}")
         mv = make_and_merge(train, labels, gamma)
 
-        false_negative, false_positives = evaluate_voting_net(apns=test.index, net=mv, distance=lambda x, y: adf(x, y, funcs))
+        false_negative, false_positives = evaluate_voting_net(apns=test.index,labels=labels, net=mv, distance=lambda x, y: adf(x, y, funcs))
         res[gamma] = [false_negative, false_positives]
 
         print("Creating and converting reference netwrok")
@@ -184,7 +187,7 @@ def exp(funcs, labels, test_size=10):
         end = time.time()
         print(f"\tElapsed: {end-start}")
 
-        false_negative, false_positives = evaluate_voting_net(apns=test.index, net=reference_voting, distance=lambda x, y: adf(x, y, funcs))
+        false_negative, false_positives = evaluate_voting_net(apns=test.index, labels=labels, net=reference_voting, distance=lambda x, y: adf(x, y, funcs))
         res_ref[gamma] = [false_negative, false_positives]
 
         nets[gamma] = [dict(mv), dict(reference_voting)]
