@@ -38,7 +38,7 @@ def create_aggregating_net(gamma: float, apns: Sequence[int], distance):
             if distance(a, n) <= gamma:
                 insert = False
                 net[n].append(a)
-                break  # does it always belong to only one point? probably
+                break
         if insert:
             net[a] = list()
 

@@ -1,6 +1,7 @@
 import unittest
-from appknn import mysample, partition_dataframe, adf
+from appknn import mysample, partition_dataframe, adf, app_k_nearest, create_aggregating_net
 import pandas as pd
+from numpy.linalg import norm
 
 
 class SomeTests(unittest.TestCase):
@@ -25,13 +26,26 @@ class SomeTests(unittest.TestCase):
         self.assertEqual(n_parts, len(ptrs))
 
     def test_adf(self):
-        #def adf(apid1: int, apid2: int, funcs) -> float:
         funcs = {0: {1, 2, 3}, 1: {1}, 2:{2, 4, 6} }
         self.assertEqual(0, adf(1,1, funcs=funcs))
         self.assertEqual(0, adf(0,0, funcs=funcs))
         self.assertEqual(adf(0,1, funcs=funcs), adf(1,0, funcs=funcs))
         self.assertLess(adf(0,1, funcs=funcs), adf(0,2, funcs=funcs)+adf(2,1, funcs=funcs))
-        
-        
-        
 
+
+    def test_app_k_n(self):
+        pts = list(range(1,5))
+        new_app = 2.7
+        r = app_k_nearest(k=1, apps=pts, new_app=new_app, distance=lambda x,y: norm(x-y))
+        self.assertEquals(r[0], 3)
+
+        r2 = app_k_nearest(k=2, apps=pts, new_app=new_app, distance=lambda x,y: norm(x-y))
+        self.assertIn(3, r2)
+        self.assertIn(2, r2)
+    
+    def test_create_agg_net(self):
+        pts = list(range(1,5)) +[0.3, 2.3]
+        net = create_aggregating_net(gamma=0.5, apns=pts, distance=lambda x,y: norm(x-y))
+        self.assertEquals(len(net), 5)
+        self.assertIn(2, net)
+        self.assertIn(2.3, net[2], f"oops {net}")
