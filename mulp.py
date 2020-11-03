@@ -10,8 +10,8 @@ from numpy.random import default_rng
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
-from appknn import (adf, app_k_nearest, create_aggregating_net, mysample,
-                    partition_dataframe)
+from appknn import (adf, app_k_nearest, create_aggregating_net)
+from dataprep import mysample, partition_dataframe
 
 
 def save_nets(nets, name):
@@ -170,8 +170,6 @@ def exp(funcs, labels, test_size=10):
 
     train, test = train_test_split(funcs, test_size=test_size, random_state=42)
     test.to_csv('/tmp/test.csv')
-    if 1==1:
-        return
 
     for gamma in tqdm([0, 1, 2, 4, 8, 16, 32, 64, 72, 80, 88, 96, 104, 110, 128, 164, 180, 192]):
         print(f"Current {gamma=}")

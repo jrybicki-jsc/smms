@@ -1,30 +1,11 @@
 import unittest
-from appknn import mysample, partition_dataframe, adf, app_k_nearest, create_aggregating_net, jaccard
+from appknn import adf, app_k_nearest, create_aggregating_net, jaccard
 import pandas as pd
 from numpy.linalg import norm
 
 
 class SomeTests(unittest.TestCase):
-    def test_sample(self):
-        df = pd.DataFrame(
-            data={
-                'apn': list(range(100)),
-                'nf': list(range(100))
-            })
-        ret = mysample(v=df, sample_size=10)
-        self.assertEqual(len(ret), 10)
-
-    def test_parts(self):
-        df = pd.DataFrame(
-            data={
-                'apn': list(range(100)),
-                'nf': list(range(100))
-            })
-
-        n_parts = 2
-        ptrs = partition_dataframe(df=df, n_parts=n_parts)
-        self.assertEqual(n_parts, len(ptrs))
-
+   
     def test_adf(self):
         funcs = {0: {1, 2, 3}, 1: {1}, 2:{2, 4, 6} }
         self.assertEqual(0, adf(1,1, funcs=funcs))

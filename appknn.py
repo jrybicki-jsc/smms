@@ -4,6 +4,7 @@ import random
 import itertools
 from collections import defaultdict
 from numpy.random import default_rng
+from dataprep import mysample
 
 def adf(apid1: int, apid2: int, funcs) -> float:
     p1 = funcs[apid1]
@@ -35,8 +36,8 @@ def create_net(gamma: float, apns: Sequence[int], distance: Callable) -> Sequenc
     return net
 
 
-def create_aggregating_net(gamma: float, apns: Sequence[int], distance):
-    net = defaultdict(list)
+def create_aggregating_net(gamma: float, apns: Sequence[int], distance: Callable[[int, int], float]):
+    net = dict()
 
     for a in apns:
         insert = True
@@ -44,7 +45,7 @@ def create_aggregating_net(gamma: float, apns: Sequence[int], distance):
             if distance(a, n) <= gamma:
                 insert = False
                 net[n].append(a)
-                break
+                break  
         if insert:
             net[a] = list()
 
@@ -86,21 +87,6 @@ def calculate_margin(smp, labels, distance: Callable) -> Tuple[float, Sequence[T
 
     return min_dist, problematic
 
-
-# sample number of apps, and included all their functions in the returned dataset
-def mysample(v, sample_size):
-    r = random.sample(list(v.apn.unique()), k=sample_size)
-    # apns = v.apn.unique sample(sample_size, random_state=42)
-    return v[v.apn.isin(r)][['apn', 'nf']]
-
-def partition_dataframe(df, n_parts):
-    rn = default_rng(42)
-    permuted_indices = rn.permutation(len(df))
-
-    dfs = []
-    for i in range(n_parts):
-        dfs.append(df.iloc[permuted_indices[i::n_parts]])
-    return dfs
 
 def margins(v, labels, sample_size, problematic=[]):
     smp = mysample(v, sample_size)  # v.sample(sample_size, random_state=42)
