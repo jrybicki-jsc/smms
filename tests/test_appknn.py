@@ -1,5 +1,5 @@
 import unittest
-from appknn import mysample, partition_dataframe, adf, app_k_nearest, create_aggregating_net
+from appknn import mysample, partition_dataframe, adf, app_k_nearest, create_aggregating_net, jaccard
 import pandas as pd
 from numpy.linalg import norm
 
@@ -49,3 +49,12 @@ class SomeTests(unittest.TestCase):
         self.assertEquals(len(net), 5)
         self.assertIn(2, net)
         self.assertIn(2.3, net[2], f"oops {net}")
+
+    def test_jaccar(self):
+        a = set([1,2])
+        b = set([7, 8, 1])
+
+        res = jaccard(0, 1, {0: a, 1: b})
+        self.assertEquals(res, 1-1.0/4)
+
+

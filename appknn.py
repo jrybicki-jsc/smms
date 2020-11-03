@@ -12,6 +12,12 @@ def adf(apid1: int, apid2: int, funcs) -> float:
     a = len(p1.difference(p2)) + len(p2.difference(p1))
     return np.sqrt(a)
 
+def jaccard(apid1: int, apid2: int, funcs) -> float:
+    p1 = funcs[apid1]
+    p2 = funcs[apid2]
+
+    return 1 - len(p1 & p2)/len(p1|p2) 
+
 
 def create_net(gamma: float, apns: Sequence[int], distance: Callable) -> Sequence[int]:
     np.random.shuffle(apns)
