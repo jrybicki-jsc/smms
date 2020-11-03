@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Tuple, Sequence, Callable
+from typing import Tuple, Sequence, Callable, NewType
 import random
 import itertools
 from collections import defaultdict
@@ -48,6 +48,30 @@ def create_aggregating_net(gamma: float, apns: Sequence[int], distance: Callable
                 break  
         if insert:
             net[a] = list()
+
+    return net
+
+MalwareClass = NewType('MalwareClass', [int, int])
+
+def lcl(a:int, labels) -> MalwareClass:
+    return [[0, 1], [1, 0]][labels[a]]
+
+
+def create_voting_net(gamma: float, 
+                      apns: Sequence[int], 
+                      distance: Callable[[int,int], float], 
+                      classifier: Callable[[int], MalwareClass ]):
+    net = dict()
+
+    for a in apns:
+        insert = True
+        for n in net.keys():
+            if distance(a, n) <= gamma:
+                insert = False
+                net[n] = list(np.add(net[n],classifier(a)))
+                break
+        if insert:
+            net[a] = classifier(a)
 
     return net
 

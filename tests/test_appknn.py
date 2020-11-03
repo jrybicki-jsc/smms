@@ -1,5 +1,5 @@
 import unittest
-from appknn import adf, app_k_nearest, create_aggregating_net, jaccard
+from appknn import adf, app_k_nearest, create_aggregating_net, jaccard, lcl, create_voting_net
 import pandas as pd
 from numpy.linalg import norm
 
@@ -37,5 +37,29 @@ class SomeTests(unittest.TestCase):
 
         res = jaccard(0, 1, {0: a, 1: b})
         self.assertEquals(res, 1-1.0/4)
+
+    def test_classifier(self):
+        labels = [0, 1, 0, 1, 0]
+        res = lcl(0, labels)
+        self.assertEquals(res, [0, 1])
+
+        res = lcl(1, labels)
+        self.assertEquals(res, [1, 0])
+
+    def test_create_voting_net(self):
+        pts = list(range(1,5)) +[0.3, 2.3]
+        vn = create_voting_net(gamma=.5, 
+            apns=pts, distance=lambda x,y: norm(x-y), classifier=lambda x: [0,1])
+        self.assertEquals(len(vn), 5)
+        self.assertIn(2, vn)
+        self.assertEquals([0,2], vn[2], f"{vn}")
+        self.assertEquals([0,1], vn[1], f"{vn}")
+        
+
+
+
+
+
+
 
 
