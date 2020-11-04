@@ -81,6 +81,33 @@ def app_k_nearest(k: int, apps: Sequence[int], new_app: int, distance: Callable)
     return byd[:k]
 
 
+def vote(votes):
+    return votes[0] < votes[1]
+
+def classify_using_voting(app, net, distance, k=1):
+    ns = app_k_nearest(k=k, apps=net.keys(), new_app=app, distance=distance)
+
+    ret = [0, 0]
+    for n in ns:
+        ret = np.add(ret, net[n])
+    return ret
+
+def evaluate_voting_net(apns, net, distance, classifier, k=1):
+    fp = 0
+    fn = 0
+    for a in apns:
+        v1 = classify_using_voting(app=a, net=net, distance=distance, k=k)
+
+        gt = vote(classifier(a))
+        rt = vote(v1)
+        if gt != rt:
+            if rt == True:
+                fp += 1
+            else:
+                fn += 1
+
+    return fn, fp
+
 # split smp according to label (malicious or not)
 def split_mal(smp, labels):
     benid = labels[labels.malware_label == False]['apn'].values

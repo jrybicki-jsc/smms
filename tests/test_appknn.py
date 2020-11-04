@@ -1,5 +1,5 @@
 import unittest
-from appknn import adf, app_k_nearest, create_aggregating_net, jaccard, lcl, create_voting_net
+from appknn import *
 import pandas as pd
 from numpy.linalg import norm
 
@@ -54,7 +54,54 @@ class SomeTests(unittest.TestCase):
         self.assertIn(2, vn)
         self.assertEquals([0,2], vn[2], f"{vn}")
         self.assertEquals([0,1], vn[1], f"{vn}")
+
+    
+    def test_vote(self):
+        maj = vote(votes=[0,1])
+        self.assertTrue(maj)
+
+        maj = vote(votes=[10,1])
+        self.assertFalse(maj)
         
+    def test_classify_using_voting(self):
+        net = {
+            0: [0, 1],
+            0.5: [0, 2],
+            3: [1,0]
+        }
+        res = classify_using_voting(app=0, net=net, distance=lambda x,y: norm(x-y), k=1)
+        self.assertListEqual([0, 1], list(res))
+
+        res = classify_using_voting(app=0, net=net, distance=lambda x,y: norm(x-y), k=2)
+        self.assertListEqual([0, 3], list(res))
+
+        res = classify_using_voting(app=3, net=net, distance=lambda x,y: norm(x-y), k=1)
+        self.assertListEqual([1, 0], list(res))
+
+        res = classify_using_voting(app=0, net=net, distance=lambda x,y: norm(x-y), k=3)
+        self.assertListEqual([1, 3], list(res))
+
+    def test_evaluate_voting_net(self):
+        net = {
+            0: [0, 1],
+            0.5: [0, 2],
+            3: [1,0]
+        }
+        labels = [0, 0, 1, 1]
+        distance = lambda  x,y: norm(x-y)
+        classifier = lambda x: lcl(x,labels)
+
+        res = evaluate_voting_net(apns=[0], net=net, distance=distance, classifier=classifier, k=1)
+        self.assertListEqual(list(res), [0, 0])
+
+        #malicious 3 overvoted by benign 0.5: false postive
+        res = evaluate_voting_net(apns=[3], net=net, distance=distance, classifier=classifier, k=2)
+        self.assertListEqual(list(res), [0, 1])
+
+        
+
+
+
 
 
 
