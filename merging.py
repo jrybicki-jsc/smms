@@ -1,6 +1,6 @@
 from collections import defaultdict
 from appknn import create_net, create_aggregating_net
-
+import numpy as np
 
 def naive_merge(n1, n2):
     # takes keys from both networks if key overlap the aggregates are merged
@@ -69,5 +69,31 @@ def net_based_multi_merge(nets, distance, gamma):
             for net in nets:
                 targ[k] += net.get(el, []).copy()
             targ[k].append(el)
+
+    return targ
+
+
+def merge_voting_nets(nets, distance, gamma):
+    apns = []
+    for net in nets:
+        apns += list(net.keys())
+
+    nn = create_aggregating_net(gamma=gamma,
+                                apns=apns,
+                                distance=distance)
+    
+    # transfer the "votes" from original networks to just created new anchors
+    targ = dict()
+    for k, v in nn.items():
+        for net in nets:
+            if k in net:
+                targ[k] = net.get(k)
+                break
+
+        for el in v:
+            for net in nets:
+                if el in net:
+                    targ[k] = list(np.add(targ[k], net[el]))
+                    break
 
     return targ

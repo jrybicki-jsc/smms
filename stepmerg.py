@@ -6,31 +6,8 @@ import numpy as np
 import pickle
 from functools import partial
 from multiprocessing import Pool
+from merging import merge_voting_nets
 
-def merge_voting_nets_new(nets, distance, gamma):
-    apns = []
-    for net in nets:
-        apns += list(net.keys())
-
-    nn = create_aggregating_net(gamma=gamma,
-                                apns=apns,
-                                distance=distance)
-    
-    # transfer the "votes" from original networks to just created new anchors
-    targ = dict()
-    for k, v in nn.items():
-        for net in nets:
-            if k in net:
-                targ[k] = net.get(k)
-                break
-
-        for el in v:
-            for net in nets:
-                if el in net:
-                    targ[k] = list(np.add(targ[k], net[el]))
-                    break
-
-    return targ
 
 def ge_anchors(gamma):
     with open(f"./res/{gamma}-singlevoting.pickle", 'rb') as f:
@@ -48,11 +25,11 @@ def generate_merged(gamma, distance, labels):
     nets = nets[gamma]
 
     print(f"One shot merging of {len(nets)} for {gamma=}")
-    onsm = merge_voting_nets_new(nets=nets, distance=distance, gamma=gamma)
+    onsm = merge_voting_nets(nets=nets, distance=distance, gamma=gamma)
 
     print("Pariwise merging")
 
-    part_merge = partial(merge_voting_nets_new, gamma=gamma, distance=distance)
+    part_merge = partial(merge_voting_nets, gamma=gamma, distance=distance)
     while len(nets) > 1:
         print(f"Hierarchical merging {len(nets)}")
         b = zip(nets[::2], nets[1::2])
