@@ -108,6 +108,20 @@ def evaluate_voting_net(apns, net, distance, classifier, k=1):
 
     return fn, fp
 
+def calculate_metrics(predictions, true_values):
+    TP = FP = TN = FN = 0
+    for true_value, predicted in zip(true_values, predictions): 
+            if true_value==predicted==True:
+                TP += 1
+            if predicted==True and true_value!=predicted:
+                FP += 1
+            if true_value==predicted==False:
+                TN += 1
+            if predicted==False and true_value!=predicted:
+                FN += 1
+    
+    return TP, FP, TN, FN
+
 # split smp according to label (malicious or not)
 def split_mal(smp, labels):
     benid = labels[labels.malware_label == False]['apn'].values

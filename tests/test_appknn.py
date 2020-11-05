@@ -98,7 +98,15 @@ class SomeTests(unittest.TestCase):
         res = evaluate_voting_net(apns=[3], net=net, distance=distance, classifier=classifier, k=2)
         self.assertListEqual(list(res), [0, 1])
 
-        
+    def test_calculate_metrics(self):
+        predictions = [True, True, False, False]
+        true_values = [True, False, True, False]
+        t= calculate_metrics(predictions, true_values)
+        self.assertEqual(4, sum(t))
+        self.assertTupleEqual(t, (1, 1, 1, 1))
+
+
+
 
 
 
