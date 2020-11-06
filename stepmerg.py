@@ -1,6 +1,6 @@
 from mulp import evaluate_voting_net
 from tqdm import tqdm
-from appknn import app_k_nearest, adf, create_aggregating_net
+from appknn import app_k_nearest, adf, create_aggregating_net, lcl
 import pandas as pd
 import numpy as np
 import pickle
@@ -47,6 +47,7 @@ if __name__ == "__main__":
     v = pd.read_csv('data/functions_encoded.csv')
     funcs = v.groupby(by='apn')['nf'].apply(set)
     def distance(x, y): return adf(x, y, funcs)
+    def classifier(x): return lcl(x, labels)
 
     print('reading test ste')
     tests = pd.read_csv('res2/9500-test.csv', index_col=0)
@@ -55,12 +56,19 @@ if __name__ == "__main__":
     sizes = dict()
 
     for gamma in tqdm([0, 1, 2, 4, 8, 16, 32, 180, 192]):
-        onsm, nets = generate_merged(
-            gamma=gamma, distance=distance, labels=labels)
+        onsm, nets = generate_merged(gamma=gamma, distance=distance, labels=labels)
         false_negative, false_positives = evaluate_voting_net(
-            apns=tests.index, net=onsm, labels=labels, distance=distance, k=1)
+            apns=tests.index,
+            net=onsm, 
+            distance=distance,
+            classifier=classifier)
+
         false_negative_steps, false_positives_steps = evaluate_voting_net(
-            apns=tests.index, net=nets, labels=labels, distance=distance, k=1)
+            apns=tests.index, 
+            net=nets, 
+            distance=distance,
+            classifier=classifier)
+
         res[gamma] = [false_negative, false_positives,
                       false_negative_steps, false_positives_steps]
         sizes[gamma] = [len(onsm.keys()), len(nets.keys())]
@@ -68,10 +76,8 @@ if __name__ == "__main__":
         with open(f"res/mergers-{gamma}.pickle", 'wb+') as f:
             pickle.dump([dict(onsm), dict(nets)], f)
 
-    merged = pd.DataFrame.from_dict(res, orient='index', columns=[
-                                    'one_fPos', 'one_fNeg', 'steps_fPos', 'steps_fNeg'])
+    merged = pd.DataFrame.from_dict(res, orient='index', columns=['one_fPos', 'one_fNeg', 'steps_fPos', 'steps_fNeg'])
     merged.to_csv(f"res/{len(tests)}-mergecomparision.csv")
 
-    sizes = pd.DataFrame.from_dict(sizes, orient='index', columns=[
-                                   'one_anchors',  'steps_anchors'])
+    sizes = pd.DataFrame.from_dict(sizes, orient='index', columns=['one_anchors',  'steps_anchors'])
     sizes.to_csv(f"res/{len(tests)}-mergecomparision-anchors.csv")
