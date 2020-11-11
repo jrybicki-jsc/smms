@@ -84,10 +84,10 @@ class SomeTests(unittest.TestCase):
     def test_evaluate_voting_net(self):
         net = {
             0: [0, 1],
-            0.5: [0, 2],
-            3: [1,0]
+            0.5: [0, 3],
+            3: [2,0]
         }
-        labels = [0, 0, 1, 1]
+        labels = [0, 0, 1, 1,0,0,0,1]
         distance = lambda  x,y: norm(x-y)
         classifier = lambda x: lcl(x,labels)
 
@@ -96,7 +96,7 @@ class SomeTests(unittest.TestCase):
 
         #malicious 3 overvoted by benign 0.5: false postive
         res = evaluate_voting_net(apns=[3], net=net, distance=distance, classifier=classifier, k=2)
-        self.assertListEqual(list(res), [0, 1])
+        self.assertListEqual(list(res), [0, 1], f"{res}")
 
     def test_calculate_metrics(self):
         predictions = [True, True, False, False]
@@ -104,6 +104,16 @@ class SomeTests(unittest.TestCase):
         t= calculate_metrics(predictions, true_values)
         self.assertEqual(4, sum(t))
         self.assertTupleEqual(t, (1, 1, 1, 1))
+
+    def test_calculate_net_compression(self):
+        net = {
+            0: [0, 1],
+            0.5: [0, 3],
+            3: [2,0]
+        }
+        res = calculate_net_compression(net)
+        self.assertEqual(.5, res)
+
 
 
 

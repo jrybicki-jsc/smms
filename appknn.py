@@ -164,3 +164,10 @@ def margins(v, labels, sample_size, problematic=[]):
     margin, problematic = calculate_margin(
         smp, labels, distance=lambda x, y, z: adf(x, y, funcs_smp))
     return margin, problematic
+
+def calculate_net_compression(net):
+    res = [0, 0]
+    for v in net.values():
+        res = np.add(res, v)
+
+    return len(net.keys())/sum(res)
