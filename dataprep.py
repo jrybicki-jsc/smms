@@ -28,4 +28,14 @@ def mysample(v, sample_size):
     # apns = v.apn.unique sample(sample_size, random_state=42)
     return v[v.apn.isin(r)][['apn', 'nf']]
 
+def precision(row):
+    return row['tp'] / (row['tp']+row['fp'])
+
+def recall(row):
+    return row['tp'] / (row['tp']+row['fn'])
+
+def r1(row):
+    pres = precision(row)
+    rec = recall(row)
+    return 2 * pres * rec / (pres + rec)
 
