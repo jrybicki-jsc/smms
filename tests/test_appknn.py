@@ -98,6 +98,26 @@ class SomeTests(unittest.TestCase):
         res = evaluate_voting_net(apns=[3], net=net, distance=distance, classifier=classifier, k=2)
         self.assertListEqual(list(res), [0, 1], f"{res}")
 
+    def test_eval_net(self):
+        net = {
+            0: [0, 1],
+            1: [0, 3],
+            3: [2,0]
+        }
+        labels = [0, 1, 1, 0, 1]
+        distance = lambda  x,y: norm(x-y)
+        classifier = lambda x: lcl(x,labels)
+
+        #TP, FP, TN, FN
+        res = eval_net(net=net, test_set=[0, 4], distance=distance, classifier=classifier)
+        self.assertEqual(res, (1,0, 1,0), f"{res}")
+        
+        res = eval_net(net=net, test_set=[1, 3], distance=distance, classifier=classifier)
+        self.assertEqual(res, (0,1, 0,1), f"{res}")
+
+
+
+
     def test_calculate_metrics(self):
         predictions = [True, True, False, False]
         true_values = [True, False, True, False]
