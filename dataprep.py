@@ -8,8 +8,8 @@ def join_tables(funcs, labels):
     gj['mal'] = gj.malware_label.astype(int)
     return gj.drop('malware_label', axis=1)
 
-def get_part_indexes(dfs, num_parts, size):
-    rn = default_rng(42)
+def get_part_indexes(dfs, num_parts, size, seed=42):
+    rn = default_rng(seed)
     permuted_indices = rn.permutation(dfs.size)
     return [permuted_indices[i:i+size] for i in range(0, size*num_parts, size)]
 
