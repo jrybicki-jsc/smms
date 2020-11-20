@@ -52,16 +52,19 @@ if __name__ == "__main__":
     nlabs = d['ml'].to_numpy()
     nc = lambda x: lcl(x, d['ml'])
 
-    sample_size = 400
+    sample_size = 300
     test_size = 50
     a= get_part_indexes(d['nf'], num_parts=1, size=sample_size, seed=42)[0]
 
     smallset = d['nf'].iloc[a]
+    print(f"Staring {sample_size} sim...")
 
     allfeatures = list(set(smallset.values[0]))
     bestfeatures = list()
     star = {apn: set() for apn in smallset.index}
     removals = list()
+    prev_best = 0
+    shallow_steps = 0
     for i in tqdm(range(100)):
         print(f"Enabled: {sum(map(len, star.values()))}")
         res = check_features(allfeatures=allfeatures, smallset=smallset, star=star, classifier=nc)
@@ -72,8 +75,16 @@ if __name__ == "__main__":
         print(f"Best performing feature is {bestfeat} {res[bestfeat]} (worst {res[min(res, key=res.get)]})")
         # remove from features
         allfeatures.remove(bestfeat)
-        removals.append(res)
         bestfeatures.append(bestfeat)
+        if res[bestfeat] > prev_best:
+            prev_best = res[bestfeat]
+            shallow_steps =0
+        else:
+            shallow_steps +=1
+            if shallow_steps > 5:
+                print(f"No improvement in {shallow_steps} performance. Quiting")
+                break
+
     print(bestfeatures)
     with open(f"res/bestfeatures-{sample_size}.pickle", 'wb+') as f:
             pickle.dump(bestfeatures, f)
