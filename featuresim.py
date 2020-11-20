@@ -8,6 +8,7 @@ from dataprep import get_part_indexes
 from tqdm import tqdm
 from appknn import predict
 from sklearn.metrics import f1_score
+from copy import deepcopy
 
 def mjaccard(x,y, nafs):
     if len(nafs[x]) == 0 == len(nafs[y]):
@@ -15,7 +16,7 @@ def mjaccard(x,y, nafs):
     return jaccard(x,y, nafs)
 
 def enable_feature(di, feature, fullset):
-    ret = di.copy()
+    ret = deepcopy(di)
     for apn, functions in ret.items():
         if feature in fullset[apn]:
             functions.add(feature)
@@ -62,6 +63,7 @@ if __name__ == "__main__":
     star = {apn: set() for apn in smallset.index}
     removals = list()
     for i in tqdm(range(100)):
+        print(f"Enabled: {sum(map(len, star.values()))}")
         res = check_features(allfeatures=allfeatures, smallset=smallset, star=star, classifier=nc)
 
         bestfeat = max(res, key=res.get)
