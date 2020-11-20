@@ -108,8 +108,12 @@ def evaluate_voting_net(apns, net, distance, classifier, k=1):
 
     return fn, fp
 
+def predict(net, test_set, distance, k=1):
+    return [vote(classify_using_voting(app=a, net=net, distance=distance, k=k)) for a in test_set]
+    
+
 def eval_net(net, test_set, distance, classifier):
-    predictions = [vote(classify_using_voting(app=a, net=net, distance=distance, k=1)) for a in test_set]
+    predictions = predict(net=net, test_set=test_set, distance=distance, k=1)
     true_values = [vote(classifier(a)) for a in test_set]
     
     return calculate_metrics(predictions, true_values)

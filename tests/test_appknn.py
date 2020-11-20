@@ -134,17 +134,3 @@ class SomeTests(unittest.TestCase):
         res = calculate_net_compression(net)
         self.assertEqual(.5, res)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
