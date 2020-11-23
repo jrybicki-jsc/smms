@@ -1,6 +1,6 @@
 import unittest
 import pandas as pd
-from dataprep import mysample, partition_dataframe, get_part_indexes, r1
+from dataprep import mysample, partition_dataframe, get_part_indexes, f1
 
 
 
@@ -39,9 +39,7 @@ class DataPrepTests(unittest.TestCase):
         a = {1: [6, 31, 0, 14], 2: [1, 23, 55, 1]}
         r = pd.DataFrame.from_dict(a, orient='index', columns=['tp', 'fp', 'tn', 'fn'])
 
-        s1, s2 = r.apply(r1, axis=1)
+        s1, s2 = r.apply(f1, axis=1)
         self.assertAlmostEqual(s1, 0.2105263157894737)
         self.assertAlmostEqual(s2, 0.07692307692307693)
-
-
 

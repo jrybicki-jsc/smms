@@ -1,6 +1,6 @@
 import pickle
 from appknn import classify_using_voting, vote, adf, lcl, calculate_metrics, eval_net, jaccard
-from dataprep import precision, recall, r1
+from dataprep import precision, recall, f1
 import pandas as pd
 from tqdm import tqdm
 import argparse
@@ -13,7 +13,7 @@ def get_data():
 def add_mets(mdf):
     mdf['precision'] = mdf.apply(precision, axis=1)
     mdf['recall'] = mdf.apply(recall, axis=1)
-    mdf['r1'] = mdf.apply(r1, axis=1)
+    mdf['f1'] = mdf.apply(f1, axis=1)
 
 def get_distance(net_filename: str):
     if 'jaccard' in net_filename:

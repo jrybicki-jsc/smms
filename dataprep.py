@@ -34,7 +34,7 @@ def precision(row):
 def recall(row):
     return row['tp'] / (row['tp']+row['fn'])
 
-def r1(row):
+def f1(row):
     pres = precision(row)
     rec = recall(row)
     return 2 * pres * rec / (pres + rec)
