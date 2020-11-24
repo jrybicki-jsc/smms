@@ -31,14 +31,29 @@ def save_nets(nets, name):
 def distance(x, y, arg):
     return jaccard(x, y, arg)
 
-def single_net(x, gamma, classifier):
+def single_net(x, gamma):
     start = time.time()
     net = create_aggregating_net(gamma=gamma, apns=x.keys(), distance=lambda x1, y1: distance(x1, y1, x))
     end = time.time()
-    print(f"Creating agg network...{gamma=} {len(x)} Elapsed: {end-start}")
-    return net
+    print(f"Creating network...{gamma=} {len(x)} Elapsed: {end-start}")
+    return dict(net)
 
-def generate_merged(gamma, distance):
+def pari_merge(x, gamma, funcs):
+    start = time.time()
+    net = net_based_multi_merge(nets=x, gamma=gamma, distance=lambda x,y: distance(x, y, funcs))
+    print(f"Merging network...{gamma=} {len(x)} Elapsed: {end-start}")
+    return dict(net)
+
+def mymerge(pair, gamma):
+    ((n1, p1), (n2, p2)) = pair
+    funcs = p1.append(p2)
+
+    print(f"Merging {len(funcs)}")
+    n = net_based_multi_merge(
+        nets=[n1, n2], distance=lambda x, y: distance(x, y, funcs), gamma=gamma)
+    return (dict(n), funcs)
+
+def generate_merged(gamma, funcs):
 
     myfc = partial(single_net, gamma=gamma)
     parts = partition_dataframe(funcs, 8)
@@ -47,17 +62,26 @@ def generate_merged(gamma, distance):
     
     save_nets({gamma: agg_networks}, f"{gamma}-singleaggregating")
 
-    
     print("Pairwise merging")
-    nets = agg_networks
-    part_merge = partial(net_based_multi_merge, gamma=gamma, distance=distance)
-    while len(nets) > 1:
-        print(f"Hierarchical merging {len(nets)}")
-        b = zip(nets[::2], nets[1::2])
+    nds = list(zip(agg_networks, parts))
+    part_merge = partial(mymerge, gamma=gamma)
+    while len(nds)>1:
+        print(f"Hierarchical merging {len(nds)}")
+        b = zip(nds[::2], nds[1::2])
         with Pool() as p:
-            nets = p.map(part_merge, b)
+            nds = p.map(part_merge,b)
 
-    return nets[0]
+    
+    
+    #nets = agg_networks
+    #part_merge = partial(pari_merge, gamma=gamma, funcs=funcs)
+    #while len(nets) > 1:
+    #    print(f"Hierarchical merging {len(nets)}")
+    #    b = zip(nets[::2], nets[1::2])
+    #    with Pool() as p:
+    #        nets = p.map(part_merge, b)
+
+    return nds[0]
 
 
 if __name__ == "__main__":
@@ -73,21 +97,20 @@ if __name__ == "__main__":
     #tests = pd.read_csv('res2/9500-test.csv', index_col=0)
     test_size = 200
     train, test = train_test_split(funcs, test_size=test_size, random_state=42)
-    test.to_csv(f"/res/test-{test_size}.csv")
+    test.to_csv(f"res/test-{test_size}.csv")
 
 
     #for gamma in tqdm([0, 1, 2, 4, 8, 16, 32, 180, 192]):
     #for gamma in tqdm([0, 0.1, 0.4, 0.5, 0.7, 0.8, 0.85, 0.9, 1.0]):
     intervals = 18
-    for gamma in tqdm([x * 1/intervals for x in range(0, intervals+1)]):
+    for gamma in tqdm([x * 1/intervals for x in range(4, intervals+1)]):
+        merged = generate_merged(gamma=gamma, funcs=funcs)
         #onsm, nets = generate_merged(gamma=gamma, distance=distance, labels=labels)
-        print("Creating reference voting netwrok")
+        print("Creating reference netwrok")
         start = time.time()
         reference = create_aggregating_net(gamma=gamma, apns=train.index, distance=d)
         end = time.time()
         print(f"\tElapsed: {end-start}")
-
-        merged = generate_merged(gamma=gamma, distance=d)
 
         
         with open(f"res/mergers-jaccard-{gamma}.pickle", 'wb+') as f:
