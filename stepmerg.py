@@ -81,7 +81,9 @@ def generate_merged(gamma, funcs):
     #    with Pool() as p:
     #        nets = p.map(part_merge, b)
 
-    return nds[0]
+    net, funcs = nds[0]
+
+    return net
 
 
 if __name__ == "__main__":
@@ -93,9 +95,13 @@ if __name__ == "__main__":
     funcs = v.groupby(by='apn')['nf'].apply(set)
     d = lambda x, y: distance(x, y, funcs)
 
+    sample_size = 200
+    smp = mysample(v, sample_size)
+    funcs = smp.groupby(by='apn')['nf'].apply(set)
+
     #print('reading test ste')
     #tests = pd.read_csv('res2/9500-test.csv', index_col=0)
-    test_size = 200
+    test_size = 20
     train, test = train_test_split(funcs, test_size=test_size, random_state=42)
     test.to_csv(f"res/test-{test_size}.csv")
 
@@ -103,7 +109,8 @@ if __name__ == "__main__":
     #for gamma in tqdm([0, 1, 2, 4, 8, 16, 32, 180, 192]):
     #for gamma in tqdm([0, 0.1, 0.4, 0.5, 0.7, 0.8, 0.85, 0.9, 1.0]):
     intervals = 18
-    for gamma in tqdm([x * 1/intervals for x in range(4, intervals+1)]):
+    for gamma in tqdm([x * 1/intervals for x in range(0, intervals+1)]):
+        
         merged = generate_merged(gamma=gamma, funcs=funcs)
         #onsm, nets = generate_merged(gamma=gamma, distance=distance, labels=labels)
         print("Creating reference netwrok")
