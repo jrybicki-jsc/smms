@@ -81,8 +81,8 @@ def app_k_nearest(k: int, apps: Sequence[int], new_app: int, distance: Callable)
     return byd[:k]
 
 
-def vote(votes):
-    return votes[0] < votes[1]
+def vote(votes, threshold = .5):
+    return votes[0] < threshold*(votes[0]+votes[1]) 
 
 def classify_using_voting(app, net, distance, k=1):
     ns = app_k_nearest(k=k, apps=net.keys(), new_app=app, distance=distance)

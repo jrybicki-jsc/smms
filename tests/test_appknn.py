@@ -62,6 +62,24 @@ class SomeTests(unittest.TestCase):
 
         maj = vote(votes=[10,1])
         self.assertFalse(maj)
+
+    def test_threshold_vote(self):
+        v  = (20, 80)
+        self.assertTrue(vote(v))
+
+        self.assertTrue(vote(v, threshold=.6))
+        self.assertTrue(vote(v, threshold=.7))
+        self.assertTrue(vote(v, threshold=.3))
+        self.assertTrue(vote(v, threshold=.21))
+
+        self.assertFalse(vote(v, threshold=.2))
+        self.assertFalse(vote(v, threshold=.14))
+        
+        
+        
+        
+
+
         
     def test_classify_using_voting(self):
         net = {
