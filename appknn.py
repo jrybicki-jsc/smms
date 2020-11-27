@@ -6,6 +6,9 @@ from collections import defaultdict
 from numpy.random import default_rng
 from dataprep import mysample
 
+
+MalwareClass = NewType('MalwareClass', [int, int])
+
 def adf(apid1: int, apid2: int, funcs) -> float:
     p1 = funcs[apid1]
     p2 = funcs[apid2]
@@ -51,10 +54,6 @@ def create_aggregating_net(gamma: float, apns: Sequence[int], distance: Callable
 
     return net
 
-MalwareClass = NewType('MalwareClass', [int, int])
-
-def lcl(a:int, labels) -> MalwareClass:
-    return [[0, 1], [1, 0]][labels[a]]
 
 
 def create_voting_net(gamma: float, 
@@ -81,8 +80,12 @@ def app_k_nearest(k: int, apps: Sequence[int], new_app: int, distance: Callable)
     return byd[:k]
 
 
+def lcl(a:int, labels) -> MalwareClass:
+    return [[0, 1], [1, 0]][labels[a]]
+
+
 def vote(votes, threshold = .5):
-    return votes[0] < threshold*(votes[0]+votes[1]) 
+    return votes[1] < threshold*(votes[0]+votes[1]) 
 
 def classify_using_voting(app, net, distance, k=1):
     ns = app_k_nearest(k=k, apps=net.keys(), new_app=app, distance=distance)

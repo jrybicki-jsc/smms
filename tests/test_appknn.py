@@ -58,22 +58,25 @@ class SomeTests(unittest.TestCase):
     
     def test_vote(self):
         maj = vote(votes=[0,1])
-        self.assertTrue(maj)
+        self.assertFalse(maj)
 
         maj = vote(votes=[10,1])
-        self.assertFalse(maj)
+        self.assertTrue(maj)
 
     def test_threshold_vote(self):
         v  = (20, 80)
-        self.assertTrue(vote(v))
+        self.assertFalse(vote(v))
 
-        self.assertTrue(vote(v, threshold=.6))
-        self.assertTrue(vote(v, threshold=.7))
-        self.assertTrue(vote(v, threshold=.3))
-        self.assertTrue(vote(v, threshold=.21))
+        self.assertFalse(vote(v, threshold=.6))
+        self.assertFalse(vote(v, threshold=.7))
+        self.assertFalse(vote(v, threshold=.3))
+        self.assertFalse(vote(v, threshold=.20))
+        self.assertFalse(vote(v, threshold=.19))
+        
+        self.assertFalse(vote(v, threshold=.8))
 
-        self.assertFalse(vote(v, threshold=.2))
-        self.assertFalse(vote(v, threshold=.14))
+        self.assertTrue(vote(v, threshold=.81))
+        
         
         
         
@@ -114,7 +117,7 @@ class SomeTests(unittest.TestCase):
 
         #malicious 3 overvoted by benign 0.5: false postive
         res = evaluate_voting_net(apns=[3], net=net, distance=distance, classifier=classifier, k=2)
-        self.assertListEqual(list(res), [0, 1], f"{res}")
+        self.assertListEqual(list(res), [1, 0], f"{res}")
 
     def test_eval_net(self):
         net = {
