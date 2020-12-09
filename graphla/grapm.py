@@ -81,6 +81,10 @@ def create_voting_net_alt(gamma, apns, classifier, distance):
             net[a] = classifier(a)
     return net
 
+def get_sarray_parts(sa, num_parts, size):
+    permuted_indices = np.random.permutation(len(sa))
+    return [[sa[permuted_indices[j]] for j in range(i,i+size)] for i in range(0, size*num_parts, size)]
+
 if __name__=="__main__":
     mw = gl.load_sframe('../binarydata/sample_10000_vt_mal_2017_2020_az_2020_benign_hashed_md5.sframe')
     subsamp = get_sample(mw=mw, frac=0.1)
