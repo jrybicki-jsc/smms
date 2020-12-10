@@ -1,10 +1,12 @@
 import pandas as pd
 import numpy as np
-import graphlab as gl
+#import graphlab as gl
+import turicreate as tc
 from tqdm.notebook import tqdm
+import time
 
 def transform_app_data(fname='../data/sample_10000_vt_mal_2017_2020_az_2020_benign_hashed_md5.csv'):
-    sf_ds1_full = gl.SFrame.read_csv(fname, header=False, verbose=False)
+    sf_ds1_full = tc.SFrame.read_csv(fname, header=False, verbose=False)
     _=sf_ds1_full.rename({'X3':'fcount'})
     sf_ds1_full['apk']=sf_ds1_full['X1'].apply(lambda x: x.upper())
     sf_ds1_full['function'] = sf_ds1_full['X2'].apply(lambda x: x.upper())
@@ -44,8 +46,8 @@ def get_jaccard_sim(apk1, apk2):
         return 0
 
 def get_recommender(data):
-    k = len(subsamp['apk'].unique())
-    return k, gl.item_similarity_recommender.create(data, 
+    k = len(data['apk'].unique())
+    return k, tc.item_similarity_recommender.create(data, 
                                                  user_id='function',
                                                  item_id='apk',
                                                  similarity_type='jaccard',
@@ -86,12 +88,19 @@ def get_sarray_parts(sa, num_parts, size):
     return [[sa[permuted_indices[j]] for j in range(i,i+size)] for i in range(0, size*num_parts, size)]
 
 if __name__=="__main__":
-    mw = gl.load_sframe('../binarydata/sample_10000_vt_mal_2017_2020_az_2020_benign_hashed_md5.sframe')
+    mw = tc.load_sframe('../binarydata/sample_10000_vt_mal_2017_2020_az_2020_benign_hashed_md5.sframe')
     subsamp = get_sample(mw=mw, frac=0.1)
     sample_apks = subsamp['apk'].unique()
     labels = read_labels()
     k, rec = get_recommender(subsamp)
     distance = lambda x,y: aio_distance(x,y, rec, k)
     clas = lambda x: classifier(x, labels)
-    net2 = create_voting_net_alt(gamma=0.6, apns=sample_apks, classifier=clas, distance=distance)
+    times = dict()
+    for gamma in [0.0, 0.2, 0.5, 0.8]:
+        print("Starting network calculation")
+        start = time.time()
+        net2 = create_voting_net_alt(gamma=gamma, apns=sample_apks, classifier=clas, distance=distance)
+        times[gamma] = time.time() - start
+        print(f"Network calculation for {gamma=} took: {times[time]}")
+
 
