@@ -2,8 +2,10 @@ import pandas as pd
 import numpy as np
 #import graphlab as gl
 import turicreate as tc
+import turicreate.aggregate as agg
 from tqdm.notebook import tqdm
 import time
+from tqdm import tqdm
 
 def transform_app_data(fname='../data/sample_10000_vt_mal_2017_2020_az_2020_benign_hashed_md5.csv'):
     sf_ds1_full = tc.SFrame.read_csv(fname, header=False, verbose=False)
@@ -68,19 +70,37 @@ def aio_distance(apk1, apk2, recommender, k):
 def classifier(apk, labels):
     return [[0, 1], [1, 0]][int(labels.loc[apk]['malware_label'])]
 
+def setup_rec(data):
+    apks = data['apk'].unique()
+    k = len(apks)
+    sim_recom = tc.item_similarity_recommender.create(data, 
+                                                      user_id='function',
+                                                      item_id='apk',
+                                                      similarity_type='jaccard',
+                                                      verbose=False,only_top_k=k)
+    return apks, k, sim_recom
 
+def create_network_alt(data, gamma, apks, k, sim_recom):
+    itms = sim_recom.get_similar_items(apks, k=k)
 
-def create_voting_net_alt(gamma, apns, classifier, distance):
+    # potentially loosing some anchors here? 
+    gw=itms[itms['score']>=1-gamma] 
+    gw = gw.groupby(key_column_names='apk', operations={'sims': agg.DISTINCT('similar')})
+    ws = set(gw['apk'])
+
     net = dict()
-    for a in apns:
-        insert = True
-        for n in net.keys():
-            if distance(a, n) <= gamma:
-                insert = False
-                net[n] = list(np.add(net[n], classifier(a)))
-                break
-        if insert:
-            net[a] = classifier(a)
+    already_added = set()
+    while len(ws)>0:
+        w= ws.pop()
+
+        simp = set(gw[gw['apk']==w]['sims'][0])
+        simp = simp - already_added
+
+        net[w] = simp
+        already_added.update(simp)
+        already_added.add(w)
+
+        ws = ws - simp
     return net
 
 def get_sarray_parts(sa, num_parts, size):
@@ -90,17 +110,20 @@ def get_sarray_parts(sa, num_parts, size):
 if __name__=="__main__":
     mw = tc.load_sframe('../binarydata/sample_10000_vt_mal_2017_2020_az_2020_benign_hashed_md5.sframe')
     subsamp = get_sample(mw=mw, frac=0.1)
-    sample_apks = subsamp['apk'].unique()
-    labels = read_labels()
-    k, rec = get_recommender(subsamp)
-    distance = lambda x,y: aio_distance(x,y, rec, k)
-    clas = lambda x: classifier(x, labels)
-    times = dict()
-    for gamma in [0.0, 0.2, 0.5, 0.8]:
+    #sample_apks = subsamp['apk'].unique()
+    #labels = read_labels()
+    #k, rec = get_recommender(subsamp)
+    #distance = lambda x,y: aio_distance(x,y, rec, k)
+    #clas = lambda x: classifier(x, labels)
+    tts = dict()
+    apks, k, sim_recom = setup_rec(subsamp)
+
+    for gamma in tqdm([0.0, 0.2, 0.5, 0.8]):
         print("Starting network calculation")
         start = time.time()
-        net2 = create_voting_net_alt(gamma=gamma, apns=sample_apks, classifier=clas, distance=distance)
-        times[gamma] = time.time() - start
-        print(f"Network calculation for {gamma=} took: {times[time]}")
+        #net2 = create_voting_net_alt(gamma=gamma, apns=sample_apks, classifier=clas, distance=distance)
+        nn = create_network_alt(data=subsamp, gamma=gamma, apks=apks, k=k, sim_recom=sim_recom)
+        tts[gamma] = time.time() - start
+        print(f"Network calculation for {gamma=} took: {tts[gamma]}")
 
 
