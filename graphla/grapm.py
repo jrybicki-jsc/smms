@@ -6,6 +6,22 @@ import turicreate.aggregate as agg
 from tqdm.notebook import tqdm
 import time
 from tqdm import tqdm
+from collections import defaultdict
+from numpy.random import default_rng
+from sklearn.model_selection import train_test_split
+from functools import partial
+
+from multiprocessing import Pool
+import pickle
+
+
+def save_nets(nets, name):
+    #normal_nets = dict()
+    # for gamma, [n1, n2] in nets.items():
+    #    normal_nets[gamma] = [dict(n1), dict(n2)]
+
+    with open(f"../res/{name}.pickle", 'wb+') as f:
+        pickle.dump(nets, f)
 
 def transform_app_data(fname='../data/sample_10000_vt_mal_2017_2020_az_2020_benign_hashed_md5.csv'):
     sf_ds1_full = tc.SFrame.read_csv(fname, header=False, verbose=False)
@@ -34,60 +50,57 @@ def get_sample(mw, frac):
     apks = mw['apk'].unique()
     sample_apks = apks.sample(fraction=frac, seed=42)
     return mw.filter_by(sample_apks, column_name='apk')
-    
-def get_similar_apks(apk):
-    similar_items = sim_recom.get_similar_items([apk], k=k)['similar', 'score']
-    similar_items.materialize()
-    return similar_items
 
-def get_jaccard_sim(apk1, apk2):
-    similar_to_apk1 = get_similar_apks(apk1)
-    try:
-        return similar_to_apk1[similar_to_apk1['similar']==apk2]['score'][0]
-    except:
-        return 0
+def votes_from_list(li, classifier):
+    classes = [classifier(a) for a in li]
+    su = sum(classes)
+    return len(classes)-su, su
 
-def get_recommender(data):
-    k = len(data['apk'].unique())
-    return k, tc.item_similarity_recommender.create(data, 
-                                                 user_id='function',
-                                                 item_id='apk',
-                                                 similarity_type='jaccard',
-                                                 verbose=False, only_top_k=k)
-    
-def jaccard_dist(apk1, apk2):
-    return 1 - get_jaccard_sim(apk1, apk2)
+def convert_to_voting(net, classifier):
+    voting_network = defaultdict(lambda: [0, 0])
 
-def aio_distance(apk1, apk2, recommender, k):
-    similar_items = recommender.get_similar_items([apk1], k=k)['similar', 'score']
-    similar_items.materialize()
-    
-    try:
-        return 1-similar_items[similar_items['similar']==apk2]['score'][0]
-    except:
-        return 1
-    
-def classifier(apk, labels):
-    return [[0, 1], [1, 0]][int(labels.loc[apk]['malware_label'])]
+    for k, l in net.items():
+        bi, mal = votes_from_list(l+[k], classifier)
+        voting_network[k] = [bi, mal]
 
-def setup_rec(data):
+    return dict(voting_network)
+
+def merge_voting_nets(nets, datas, gamma):
+    dat = datas[0]
+    for data in datas[1:]:
+        dat = dat.append(data)
+
+    nn = f_create_network(gamma=gamma,data=dat)
+    
+    # transfer the "votes" from original networks to just created new anchors
+    targ = dict()
+    for k, v in nn.items():
+        for net in nets:
+            if k in net:
+                targ[k] = net.get(k)
+                break
+
+        for el in v:
+            for net in nets:
+                if el in net:
+                    targ[k] = list(np.add(targ[k], net[el]))
+                    break
+
+    return targ
+
+def f_create_network(data, gamma):
     apks = data['apk'].unique()
-    k = len(apks)
+    k = apks.shape[0]
     sim_recom = tc.item_similarity_recommender.create(data, 
-                                                      user_id='function',
-                                                      item_id='apk',
-                                                      similarity_type='jaccard',
-                                                      verbose=False,only_top_k=k)
-    return apks, k, sim_recom
-
-def create_network_alt(data, gamma, apks, k, sim_recom):
+                                                      user_id='function', 
+                                                      item_id='apk', 
+                                                      similarity_type='jaccard', 
+                                                      only_top_k=k, verbose=False)
     itms = sim_recom.get_similar_items(apks, k=k)
-
-    # potentially loosing some anchors here? 
-    gw=itms[itms['score']>=1-gamma] 
-    gw = gw.groupby(key_column_names='apk', operations={'sims': agg.DISTINCT('similar')})
+    # missing more "distant nodes", "not aggregating nodes"
+    gw=itms[itms['score']>=1-gamma].groupby(key_column_names='apk', operations={'sims': agg.DISTINCT('similar')})
+    
     ws = set(gw['apk'])
-
     net = dict()
     already_added = set()
     while len(ws)>0:
@@ -96,34 +109,108 @@ def create_network_alt(data, gamma, apks, k, sim_recom):
         simp = set(gw[gw['apk']==w]['sims'][0])
         simp = simp - already_added
 
-        net[w] = simp
+        net[w] = list(simp)
         already_added.update(simp)
         already_added.add(w)
 
         ws = ws - simp
+    
+    # add solitary nodes & not-aggregating nodes
+    if len(already_added)> 0:
+        nds = apks.filter_by(list(already_added), exclude=True)
+    else:
+        nds = apks
+        
+    for n in nds:
+        net[n] = []
+        
     return net
 
-def get_sarray_parts(sa, num_parts, size):
-    permuted_indices = np.random.permutation(len(sa))
-    return [[sa[permuted_indices[j]] for j in range(i,i+size)] for i in range(0, size*num_parts, size)]
+
+def partition_ndframe(nd, n_parts):
+    rn = default_rng(42)
+    permuted_indices = rn.permutation(len(nd))
+
+    dfs = []
+    for i in range(n_parts):
+        dfs.append(nd[permuted_indices[i::n_parts]])
+    return dfs
+
+def dist_and_net(data, gamma):
+    net = f_create_network(data=data, gamma=gamma)
+    return net, data.filter_by(values=net.keys(), column_name='apk')
+
+def convert_with_dist(pair, classifier):
+    return convert_to_voting(pair[0], classifier=classifier), pair[1]
+
+def make_and_merge(parts, labels, gamma):
+    print(f"Starting network creation {gamma}")
+    myfc = partial(dist_and_net, gamma=gamma)
+    with Pool() as p:
+        aggregating_networks = p.map(myfc, parts)
+    
+    save_nets({gamma: aggregating_networks}, f"{gamma}-tc-singleaggregating")
+
+
+    classifier = lambda x: int(labels.loc[x]['malware_label'])
+    myconv = partial(convert_with_dist, classifier=classifier)
+    print("Starting voting conversion")
+    with Pool() as p:
+        voting_networks = p.map(myconv, aggregating_networks)
+
+    save_nets({gamma: voting_networks}, f"{gamma}-tc-singlevoting")
+
+    print("Merging")
+    start = time.time()
+
+    #nds = list(zip(voting_networks, parts))
+    #part_merge = partial(mymerge, gamma=gamma)
+    # while len(nds)>1:
+    #    print(f"Hierarchical merging {len(nds)}")
+    #    b = zip(nds[::2], nds[1::2])
+    #    with Pool() as p:
+    #        nds = p.map(part_merge,b)
+    nets, datas = zip(*voting_networks)
+    mv = merge_voting_nets(nets=nets, datas=datas, gamma=gamma)
+    end = time.time()
+    print(f"\tElapsed: {end-start}")
+    return mv
 
 if __name__=="__main__":
     mw = tc.load_sframe('../binarydata/sample_10000_vt_mal_2017_2020_az_2020_benign_hashed_md5.sframe')
-    subsamp = get_sample(mw=mw, frac=0.1)
-    #sample_apks = subsamp['apk'].unique()
-    #labels = read_labels()
-    #k, rec = get_recommender(subsamp)
-    #distance = lambda x,y: aio_distance(x,y, rec, k)
-    #clas = lambda x: classifier(x, labels)
-    tts = dict()
-    apks, k, sim_recom = setup_rec(subsamp)
+    mw.remove_column('fcount', inplace=True)
+    subsamp = get_sample(mw=mw, frac=0.2)
 
-    for gamma in tqdm([0.0, 0.2, 0.5, 0.8]):
-        print("Starting network calculation")
+    napks = subsamp['apk'].unique().to_numpy()
+    test_size = 1000
+    train, test = train_test_split(napks, test_size=test_size, random_state=42)
+    np.save(f"../res/test-tc-{test_size}", test)
+
+    parts = partition_ndframe(nd=napks, n_parts=4)
+    sparts = [subsamp.filter_by(values=part, column_name='apk') for part in parts]
+
+    labels = read_labels()
+    classifier = lambda x: int(labels.loc[x]['malware_label'])
+
+    nets = dict()
+    intervals = 18
+    for gamma in tqdm([x * 1/intervals for x in range(0, intervals+1)]):
+        print(f"Current {gamma=}")
+        mv = make_and_merge(gamma=gamma, parts=sparts, labels=labels)
+        
+        print("Creating reference voting netwrok")
         start = time.time()
-        #net2 = create_voting_net_alt(gamma=gamma, apns=sample_apks, classifier=clas, distance=distance)
-        nn = create_network_alt(data=subsamp, gamma=gamma, apks=apks, k=k, sim_recom=sim_recom)
-        tts[gamma] = time.time() - start
-        print(f"Network calculation for {gamma=} took: {tts[gamma]}")
+        reference_agg = f_create_network(gamma=gamma, data=subsamp)
+        end = time.time()
+        print(f"\tElapsed: {end-start}")
+        
+        nets[gamma] = [dict(mv), dict(reference_agg)]
+    
 
+        print(f"Anchor points: {len(mv.keys())}")
+        if len(mv.keys()) == 1:
+            break
 
+    # save nets:
+    save_nets(nets=nets, name=f"{len(train)}-tc-jaccard-votingnets")
+    
