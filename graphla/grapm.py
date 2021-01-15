@@ -146,19 +146,19 @@ def convert_with_dist(pair, classifier):
 def make_and_merge(parts, labels, gamma):
     print(f"Starting network creation {gamma}")
     myfc = partial(dist_and_net, gamma=gamma)
-    with Pool() as p:
-        aggregating_networks = p.map(myfc, parts)
-    
-    save_nets({gamma: aggregating_networks}, f"{gamma}-tc-singleaggregating")
+    #with Pool() as p:
+    aggregating_networks = [myfc(part) for part in parts]
+    nets, _ = zip(*aggregating_networks)
+    save_nets({gamma: nets}, f"{gamma}-tc-singleaggregating")
 
 
     classifier = lambda x: int(labels.loc[x]['malware_label'])
     myconv = partial(convert_with_dist, classifier=classifier)
     print("Starting voting conversion")
-    with Pool() as p:
-        voting_networks = p.map(myconv, aggregating_networks)
-
-    save_nets({gamma: voting_networks}, f"{gamma}-tc-singlevoting")
+    #with Pool() as p:
+    voting_networks = [myconv(pair) for pair in aggregating_networks]
+    nets, _ = zip(*voting_networks)
+    save_nets({gamma: nets}, f"{gamma}-tc-singlevoting")
 
     print("Merging")
     start = time.time()
