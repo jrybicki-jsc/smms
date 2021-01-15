@@ -177,7 +177,7 @@ def make_and_merge(parts, labels, gamma):
     return mv
 
 if __name__=="__main__":
-    mw = tc.load_sframe('../binarydata/sample_10000_vt_mal_2017_2020_az_2020_benign_hashed_md5.sframe')
+    mw = tc.load_sframe('../binarydata/funcs-encoded')
     mw.remove_column('fcount', inplace=True)
     subsamp = get_sample(mw=mw, frac=0.2)
 
@@ -189,7 +189,7 @@ if __name__=="__main__":
     parts = partition_ndframe(nd=napks, n_parts=4)
     sparts = [subsamp.filter_by(values=part, column_name='apk') for part in parts]
 
-    labels = read_labels()
+    labels = pd.read_csv('../data/labels_encoded.csv', index_col=0)
     classifier = lambda x: int(labels.loc[x]['malware_label'])
 
     nets = dict()
