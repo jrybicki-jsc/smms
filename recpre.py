@@ -22,10 +22,13 @@ def get_predictions_score(net, distance, test):
     return conver_to_probs(votes)
 
 if __name__=="__main__":
-    net_file = 'res/9503-jaccard-votingnets.pickle'
-    test_file ='res/10003-test.csv'
+    #net_file = 'res/9503-jaccard-votingnets.pickle'
+    #test_file ='res/10003-test.csv'
+    net_file = 'res/9003-tc-jaccard-votingnets.pickle'
+    test_file = 'res/test-tc-1000.npy'
 
-    test = pd.read_csv(test_file, index_col=0)
+    #test = pd.read_csv(test_file, index_col=0)
+    test = np.load(test_file)
     with open(net_file, 'rb') as f:
         nets = pickle.load(f)
         
@@ -36,7 +39,8 @@ if __name__=="__main__":
 
     refs = dict()
     mers = dict()
-    test_a = list(test.index)
+    #test_a = list(test.index)
+    test_a  = list(test)
     for gamma, [mer, ref] in tqdm(nets.items()):
         mers[gamma] = get_predictions_score(net=mer, distance=distance, test=test_a)
         refs[gamma] = get_predictions_score(net=ref, distance=distance, test=test_a)
@@ -46,10 +50,10 @@ if __name__=="__main__":
         with open(f"/tmp/preds-{gamma}-refs.pickle", 'wb+') as f:
             pickle.dump(refs[gamma], f)
     
-    with open(f"res/preds-mers.pickle", 'wb+') as f:
+    with open(f"res/tc-preds-mers.pickle", 'wb+') as f:
         pickle.dump(mers, f)
     
-    with open(f"res/preds-refs.pickle", 'wb+') as f:
+    with open(f"res/tc-preds-refs.pickle", 'wb+') as f:
         pickle.dump(refs, f)
         
     
