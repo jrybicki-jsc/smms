@@ -198,13 +198,16 @@ if __name__=="__main__":
         print(f"Current {gamma=}")
         mv = make_and_merge(gamma=gamma, parts=sparts, labels=labels)
         
-        print("Creating reference voting netwrok")
+        print("Creating reference aggregating netwrok")
         start = time.time()
         reference_agg = f_create_network(gamma=gamma, data=subsamp)
+        reference_voting = convert_to_voting(reference_agg, classifier)
         end = time.time()
+        #
         print(f"\tElapsed: {end-start}")
+        save_nets({gamma: [reference_agg]}, f"{gamma}-tc-singlereferenceaggregating")
         
-        nets[gamma] = [dict(mv), dict(reference_agg)]
+        nets[gamma] = [dict(mv), dict(reference_voting)]
     
 
         print(f"Anchor points: {len(mv.keys())}")
