@@ -37,6 +37,7 @@ if __name__=="__main__":
     distance = lambda x,y: jaccard(x,y, m['nf'])
     classifier = lambda x: lcl(x, m['ml'])
 
+
     refs = dict()
     mers = dict()
     #test_a = list(test.index)
