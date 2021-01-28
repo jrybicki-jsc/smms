@@ -189,6 +189,7 @@ if __name__=="__main__":
 
     parts = partition_ndframe(nd=train, n_parts=4)
     sparts = [subsamp.filter_by(values=part, column_name='apk') for part in parts]
+    ftrain = subsamp.filter_by(values=train, column_name='apk')
 
     labels = pd.read_csv('../data/labels_encoded.csv', index_col=0)
     classifier = lambda x: int(labels.loc[x]['malware_label'])
@@ -201,7 +202,7 @@ if __name__=="__main__":
         
         print("Creating reference aggregating netwrok")
         start = time.time()
-        reference_agg = f_create_network(gamma=gamma, data=subsamp)
+        reference_agg = f_create_network(gamma=gamma, data=ftrain)
         reference_voting = convert_to_voting(reference_agg, classifier)
         end = time.time()
         #
