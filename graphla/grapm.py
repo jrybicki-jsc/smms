@@ -179,14 +179,15 @@ def make_and_merge(parts, labels, gamma):
 if __name__=="__main__":
     mw = tc.load_sframe('../binarydata/funcs-encoded')
     mw.remove_column('fcount', inplace=True)
-    subsamp = get_sample(mw=mw, frac=0.2)
+    #subsamp = get_sample(mw=mw, frac=0.2)
+    subsamp = mw
 
     napks = subsamp['apk'].unique().to_numpy()
     test_size = 1000
     train, test = train_test_split(napks, test_size=test_size, random_state=42)
     np.save(f"../res/test-tc-{test_size}", test)
 
-    parts = partition_ndframe(nd=napks, n_parts=4)
+    parts = partition_ndframe(nd=train, n_parts=4)
     sparts = [subsamp.filter_by(values=part, column_name='apk') for part in parts]
 
     labels = pd.read_csv('../data/labels_encoded.csv', index_col=0)
