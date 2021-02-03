@@ -200,7 +200,7 @@ if __name__=="__main__":
         print(f"Current {gamma=}")
         mv = make_and_merge(gamma=gamma, parts=sparts, labels=labels)
         
-        print("Creating reference aggregating netwrok")
+        print("Creating reference aggregating network")
         start = time.time()
         reference_agg = f_create_network(gamma=gamma, data=ftrain)
         reference_voting = convert_to_voting(reference_agg, classifier)
