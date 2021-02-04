@@ -87,7 +87,8 @@ if __name__=="__main__":
         print(f"\tElapsed: {end-start}")
 
         voting = convert_to_voting(merged, classifier)
-        save_nets({gamma: [true_dicts]}, f"{gamma}-stream-singleaggregating")
+        
+        save_nets({gamma: [true_dicts, origin_net]}, f"{gamma}-stream-singleaggregating")
         nets[gamma] = [merged, voting]
         
         
