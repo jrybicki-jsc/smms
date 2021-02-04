@@ -1,20 +1,15 @@
-import pandas as pd
-import numpy as np
-#import graphlab as gl
-import turicreate as tc
-import turicreate.aggregate as agg
-from tqdm.notebook import tqdm
+import pickle
 import time
-from tqdm import tqdm
-from collections import defaultdict
+import numpy as np
+import pandas as pd
 from numpy.random import default_rng
 from sklearn.model_selection import train_test_split
-from functools import partial
+from tqdm import tqdm
+import turicreate as tc
+import turicreate.aggregate as agg
+from grapm import (convert_to_voting, f_create_network, partition_ndframe,
+                   save_nets)
 
-from multiprocessing import Pool
-import pickle
-
-from grapm import partition_ndframe, f_create_network, convert_to_voting, save_nets
 
 def get_anchor_coords(net, data):
     return data.filter_by(values=list(net.keys()), column_name='apk')
@@ -98,4 +93,3 @@ if __name__=="__main__":
         
     # save nets:
     save_nets(nets=nets, name=f"{len(train)}-stream-nets")
-    
