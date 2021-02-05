@@ -70,7 +70,7 @@ def merge_voting_nets(nets, datas, gamma):
     for data in datas[1:]:
         dat = dat.append(data)
 
-    nn = f_create_network(gamma=gamma,data=dat)
+    nn = f_create_network(gamma=gamma, data=dat)
     
     # transfer the "votes" from original networks to just created new anchors
     targ = dict()
@@ -95,7 +95,7 @@ def f_create_network(data, gamma):
                                                       user_id='function', 
                                                       item_id='apk', 
                                                       similarity_type='jaccard', 
-                                                      only_top_k=k, verbose=False)
+                                                      only_top_k=k, threshold=0.0, verbose=False)
     itms = sim_recom.get_similar_items(apks, k=k)
     # missing more "distant nodes", "not aggregating nodes"
     gw=itms[itms['score']>=1-gamma].groupby(key_column_names='apk', operations={'sims': agg.DISTINCT('similar')})
