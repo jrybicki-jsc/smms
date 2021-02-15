@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 import turicreate as tc
 import turicreate.aggregate as agg
-from grapm import (convert_to_voting, f_create_network, partition_ndframe,
+from .grapm import (convert_to_voting, f_create_network, partition_ndframe,
                    save_nets)
 
 
@@ -23,6 +23,13 @@ def naive_merge(n1, n2):
             nx[key] = list(set(nx[key]+n1[key]))
     return nx
 
+def naive_voting_merge(n1, n2):
+    nx = {**n1, **n2}
+    for key in nx.keys():
+        if (key in n1) and (key in n2):
+            nx[key] = list(np.add(n1[key],nx[key]))
+    return nx
+
 def tc_based_nn(net, apks, data):
     anch = list(net.keys())
     anch.extend(apks)
@@ -34,6 +41,7 @@ def tc_based_nn(net, apks, data):
         user_id='function', 
         item_id='apk', 
         similarity_type='jaccard', 
+        degree_approximation_threshold=2*4096,
         only_top_k=m, verbose=False)
     
     # smaller k could be an optimization here
