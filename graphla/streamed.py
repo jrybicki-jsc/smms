@@ -41,7 +41,7 @@ def tc_based_nn(net, apks, data):
         user_id='function', 
         item_id='apk', 
         similarity_type='jaccard', 
-        degree_approximation_threshold=2*4096,
+        degree_approximation_threshold=15*4096,
         only_top_k=m, verbose=False)
     
     # smaller k could be an optimization here

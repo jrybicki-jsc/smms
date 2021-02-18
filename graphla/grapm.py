@@ -95,7 +95,8 @@ def f_create_network(data, gamma):
                                                       user_id='function', 
                                                       item_id='apk', 
                                                       similarity_type='jaccard', 
-                                                      only_top_k=k, degree_approximation_threshold=2*4096, 
+                                                      only_top_k=k, 
+                                                      degree_approximation_threshold=15*4096, 
                                                       threshold=0.0, verbose=False)
     itms = sim_recom.get_similar_items(apks, k=k)
     # missing more "distant nodes", "not aggregating nodes"
