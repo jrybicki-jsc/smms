@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 import turicreate as tc
 import turicreate.aggregate as agg
-from .grapm import (convert_to_voting, f_create_network, partition_ndframe,
+from grapm import (convert_to_voting, f_create_network, partition_ndframe,
                    save_nets)
 
 
