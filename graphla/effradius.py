@@ -5,9 +5,9 @@ import pickle
 
 def setup_items(data):
     print('Setting up items')
-    apks = mw['apk'].unique()
+    apks = data['apk'].unique()
     k = apks.shape[0]
-    sim_recom = tc.item_similarity_recommender.create(mw, 
+    sim_recom = tc.item_similarity_recommender.create(data, 
                                                       user_id='function', 
                                                       item_id='apk', 
                                                       similarity_type='jaccard', 
