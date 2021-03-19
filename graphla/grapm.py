@@ -191,7 +191,7 @@ def f_create_network(data, gamma):
     net = r.to_dataframe().set_index('nn').to_dict(orient='dict')['aggregates']
 
     # not used anchors added:
-    net.update({an:[] for an in nw if an not in net})
+    net.update({an:[] for an in anchors if an not in net})
     return net
 
 
