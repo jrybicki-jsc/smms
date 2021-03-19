@@ -88,7 +88,7 @@ def merge_voting_nets(nets, datas, gamma):
 
     return targ
 
-def f_create_network(data, gamma):
+def old_f_create_network(data, gamma):
     apks = data['apk'].unique()
     k = apks.shape[0]
     sim_recom = tc.item_similarity_recommender.create(data, 
@@ -126,6 +126,72 @@ def f_create_network(data, gamma):
     for n in nds:
         net[n] = []
         
+    return net
+
+
+def f_create_network(data, gamma):
+    apks = data['apk'].unique()
+    k = apks.shape[0]
+    sim_recom = tc.item_similarity_recommender.create(data, 
+                                                      user_id='function', 
+                                                      item_id='apk', 
+                                                      similarity_type='jaccard', 
+                                                      only_top_k=k, 
+                                                      degree_approximation_threshold=15*4096, 
+                                                      threshold=0.0, verbose=False)
+    itms = sim_recom.get_similar_items(apks, k=k)
+    # missing more "distant nodes", "not aggregating nodes"
+    # setup a list in form: apk [apk1, apk2,...]
+    # all aggregated items will be closer than given radius, ie, they are def. not anchors
+    # the list will be used to build network in a greedy way
+    gw=itms[itms['score']>=1-gamma].groupby(key_column_names='apk', operations={'sims': agg.DISTINCT('similar')})
+    
+    ws = set(gw['apk'])
+    anchors = list()
+    already_added = set()
+    # greedy building net
+    # start with first row apk1, [apk2, apk3, apk4...], 
+    # apk1 is added to network, 
+    # remove all apks that are closer than radius (ie. all from the list) from the following rows
+    while len(ws)>0:
+        w= ws.pop()
+        anchors.append(w)
+
+        # all apks closer than given radius to this anchors
+        simp = set(gw[gw['apk']==w]['sims'][0])
+        simp = simp - already_added
+            
+        already_added.update(simp)
+        already_added.add(w)
+
+        # remove its aggregates 
+        ws = ws - simp
+    
+    # move to nodes pairs that are at distance > radius
+    # there should be no close nodes to that one, otherwise they
+    # would appear in the previous loop
+    if len(already_added)> 0:
+        nds = apks.filter_by(list(already_added), exclude=True)
+        
+    # special case for gamma=0
+    else:
+        nds = apks
+        
+    
+    anchors = anchors + list(nds)
+    
+    #following is equivallent to NN search on just created anchors:
+    # done here to reuse existing recommender
+    
+    # recomendations excluding similarity between apks
+    fitems = itms.filter_by(values=anchors, column_name='apk',exclude=True).filter_by(values=anchors,column_name='similar')
+    
+    gwrrd = fitems.groupby(key_column_names=['apk'], operations={'nn': tc.aggregate.ARGMAX('score', 'similar')})
+    r = gwrrd.groupby(key_column_names=['nn'], operations={'aggregates': agg.DISTINCT('apk')})
+    net = r.to_dataframe().set_index('nn').to_dict(orient='dict')['aggregates']
+
+    # not used anchors added:
+    net.update({an:[] for an in nw if an not in net})
     return net
 
 
