@@ -15,7 +15,10 @@ if __name__ =="__main__":
     args = parser.parse_args()
     print(args)
 
-    mw = tc.SFrame.read_csv(args.input, header=False, verbose=False)
+
+    tc.config.set_runtime_config('TURI_FILEIO_MAXIMUM_CACHE_CAPACITY',5*2147483648)
+    tc.config.set_runtime_config('TURI_FILEIO_MAXIMUM_CACHE_CAPACITY_PER_FILE', 5*134217728)
+    mw = tc.SFrame.read_csv(args.input, header=False, verbose=True)#, nrows=100)
     print(mw.head())
 
     mw['hapk'] = mw['X1'].apply(lambda x: hash(str.upper(x)))
@@ -24,3 +27,7 @@ if __name__ =="__main__":
     print(clk.head())
 
     clk.save(args.output, format='binary')
+
+    #alternative: using pandas
+    #tp = pd.read_csv('large_dataset.csv', iterator=True, chunksize=1000)  # gives TextFileReader, which is iterable with chunks of 1000 rows.
+    #df = pd.concat(tp, ignore_index=True)
