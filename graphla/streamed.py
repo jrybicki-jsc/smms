@@ -9,7 +9,10 @@ import turicreate as tc
 import turicreate.aggregate as agg
 from grapm import (convert_to_voting, f_create_network, partition_ndframe,
                    save_nets)
-
+import argparse
+import pathlib
+import datetime
+import os
 
 def get_anchor_coords(net, data):
     return data.filter_by(values=list(net.keys()), column_name='apk')
@@ -52,8 +55,25 @@ def tc_based_nn(net, apks, data):
     return fitems.groupby(key_column_names=['apk'], operations={'nn': tc.aggregate.ARGMAX('score', 'similar')})
 
 if __name__=="__main__":
-    mw = tc.load_sframe('../binarydata/funcs-encoded')
-    mw.remove_column('fcount', inplace=True)
+    parser = argparse.ArgumentParser(description='Streamed network calculation')
+    parser.add_argument('--functions', help='name of the input functions', required=True)
+    parser.add_argument('--labels', help='location of labels file', required=True)
+    parser.add_argument('--p', help='number of partitions', default=4, type=int)
+    parser.add_argument('--output', help='output path', required=True)
+    args = parser.parse_args()
+    print(args)
+
+    print(f"Loading functions from {args.functions}")
+    mw = tc.load_sframe(args.functions)
+    if 'fcount' in mw.column_names():
+        mw.remove_column('fcount', inplace=True)
+
+    if 'hapk' in mw.column_names():
+        mw.rename(names={'hapk': 'apk'}, inplace=True)
+
+    if 'hfunc' in mw.column_names():
+        mw.rename(names={'hfunc': 'function'}, inplace=True)
+
     #subsamp = get_sample(mw=mw, frac=0.2)
     subsamp = mw
 
@@ -62,16 +82,24 @@ if __name__=="__main__":
     train, test = train_test_split(napks, test_size=test_size, random_state=42)
     np.save(f"../res/test-tc-{test_size}", test)
 
-    parts = partition_ndframe(nd=train, n_parts=4)
+    print(f"Spliting into {args.p} partitions")
+    parts = partition_ndframe(nd=train, n_parts=args.p)
     sparts = [subsamp.filter_by(values=part, column_name='apk') for part in parts]
     ftrain = subsamp.filter_by(values=train, column_name='apk')
 
-    labels = pd.read_csv('../data/labels_encoded.csv', index_col=0)
+    print(f"Reading labels from {args.labels}")
+    labels = pd.read_csv(args.labels, index_col=0)
     classifier = lambda x: int(labels.loc[x]['malware_label'])
 
+    run = datetime.datetime.now().strftime("run-%Y-%m-%R")
+    ww = os.path.join(args.output, run)
+    pathlib.Path(ww).mkdir(parents=True, exist_ok=True)
+
     nets = dict()
-    intervals = 18
-    for gamma in tqdm([x * 1/intervals for x in range(0, intervals+1)]):
+    intervals = 20
+    gammas = [x * 1/intervals for x in range(0, intervals+1)]
+    gammas = [0.65]
+    for gamma in tqdm(gammas):
         print(f"Current {gamma=}")
         print("Creating origin network")
         
@@ -96,7 +124,7 @@ if __name__=="__main__":
 
         voting = convert_to_voting(merged, classifier)
         
-        save_nets({gamma: [true_dicts, origin_net]}, f"{gamma}-stream-singleaggregating")
+        save_nets(nets={gamma: [true_dicts, origin_net]}, name=f"{gamma}-stream-singleaggregating", directory=ww)
         nets[gamma] = [merged, voting]
         
         

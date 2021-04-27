@@ -3,7 +3,6 @@ import numpy as np
 #import graphlab as gl
 import turicreate as tc
 import turicreate.aggregate as agg
-from tqdm.notebook import tqdm
 import time
 from tqdm import tqdm
 from collections import defaultdict
@@ -13,14 +12,14 @@ from functools import partial
 
 from multiprocessing import Pool
 import pickle
+import os
 
-
-def save_nets(nets, name):
+def save_nets(nets, name, directory='../res/'):
     #normal_nets = dict()
     # for gamma, [n1, n2] in nets.items():
     #    normal_nets[gamma] = [dict(n1), dict(n2)]
 
-    with open(f"../res/{name}.pickle", 'wb+') as f:
+    with open(os.path.join(directory, f"{name}.pickle"), 'wb+') as f:
         pickle.dump(nets, f)
 
 def transform_app_data(fname='../data/sample_10000_vt_mal_2017_2020_az_2020_benign_hashed_md5.csv'):
