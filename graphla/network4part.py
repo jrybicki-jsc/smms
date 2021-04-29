@@ -12,6 +12,7 @@ import os
 from grapm import partition_ndframe
 import datetime
 from grapm import f_create_network, convert_to_voting, save_nets
+import logging
 
 
 if __name__=="__main__":
@@ -21,14 +22,20 @@ if __name__=="__main__":
     parser.add_argument('--output', help='output path', required=True)
     parser.add_argument('--gamma', help='gamma', default=.65, type=float)
     args = parser.parse_args()
-    print(args)
+
+    run = datetime.datetime.now().strftime("run-%Y-%m-%R")
+    ww = os.path.join(args.output, run)
+    pathlib.Path(ww).mkdir(parents=True, exist_ok=True)
+    
+    logging.basicConfig(filename=f"{ww}/info.log", level=logging.INFO, format='%(asctime)s %(name)s %(levelname)s %(message)s')
+    logging.info(args)
 
     tc.config.set_runtime_config('TURI_FILEIO_MAXIMUM_CACHE_CAPACITY',5*2147483648)
     tc.config.set_runtime_config('TURI_FILEIO_MAXIMUM_CACHE_CAPACITY_PER_FILE', 5*134217728)
     # following can reduce the memory footprint
     tc.config.set_runtime_config('TURI_DEFAULT_NUM_PYLAMBDA_WORKERS', 1)
 
-    print(f"Loading functions from {args.functions}")
+    logging.info(f"Loading functions from {args.functions}")
     mw = tc.load_sframe(args.functions)
     if 'fcount' in mw.column_names():
         mw.remove_column('fcount', inplace=True)
@@ -39,18 +46,14 @@ if __name__=="__main__":
     if 'hfunc' in mw.column_names():
         mw.rename(names={'hfunc': 'function'}, inplace=True)
 
-    print(f"Reading labels from {args.labels}")
+    logging.info(f"Reading labels from {args.labels}")
     labels = pd.read_csv(args.labels, index_col=0)
     classifier = lambda x: int(labels.loc[x]['malware_label'])
 
-    run = datetime.datetime.now().strftime("run-%Y-%m-%R")
-    ww = os.path.join(args.output, run)
-    pathlib.Path(ww).mkdir(parents=True, exist_ok=True)
-    
     napks = mw['apk'].unique().to_numpy()
-    print(f"Got: {napks.shape[0]} apks")
+    logging.info(f"Got: {napks.shape[0]} apks")
     
     net = f_create_network(data=mw, gamma=args.gamma)
     voting = convert_to_voting(net, classifier)
 
-    save_nets({args.gamma: [net, voting]}, f"{gamma}-tc-nets", , directory=ww)
+    save_nets({args.gamma: [net, voting]}, f"{args.gamma}-tc-nets",  directory=ww)
