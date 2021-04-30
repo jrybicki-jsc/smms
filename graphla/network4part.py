@@ -23,7 +23,7 @@ if __name__=="__main__":
     parser.add_argument('--gamma', help='gamma', default=.65, type=float)
     args = parser.parse_args()
 
-    run = datetime.datetime.now().strftime("run-%Y-%m-%R")
+    run = datetime.datetime.now().strftime("run-%Y-%m-%d-%R")
     ww = os.path.join(args.output, run)
     pathlib.Path(ww).mkdir(parents=True, exist_ok=True)
     
@@ -50,10 +50,12 @@ if __name__=="__main__":
     labels = pd.read_csv(args.labels, index_col=0)
     classifier = lambda x: int(labels.loc[x]['malware_label'])
 
+
+
     napks = mw['apk'].unique().to_numpy()
     logging.info(f"Got: {napks.shape[0]} apks")
     
     net = f_create_network(data=mw, gamma=args.gamma)
-    voting = convert_to_voting(net, classifier)
+    #voting = convert_to_voting(net, classifier)
 
-    save_nets({args.gamma: [net, voting]}, f"{args.gamma}-tc-nets",  directory=ww)
+    save_nets({args.gamma: [net]}, f"{args.gamma}-tc-nets",  directory=ww)
