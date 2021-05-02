@@ -32,10 +32,11 @@ if __name__=="__main__":
     logging.basicConfig(filename=f"{ww}/info.log", level=logging.INFO, format='%(asctime)s %(name)s %(levelname)s %(message)s')
     logging.info(args)
 
+
     tc.config.set_runtime_config('TURI_FILEIO_MAXIMUM_CACHE_CAPACITY',5*2147483648)
     tc.config.set_runtime_config('TURI_FILEIO_MAXIMUM_CACHE_CAPACITY_PER_FILE', 5*134217728)
     # following can reduce the memory footprint
-    tc.config.set_runtime_config('TURI_DEFAULT_NUM_PYLAMBDA_WORKERS', 1)
+    tc.config.set_runtime_config('TURI_DEFAULT_NUM_PYLAMBDA_WORKERS', 4)
 
     logging.info(f"Loading functions from {args.functions}{args.p}")
     mw = tc.load_sframe(f"{args.functions}{args.p}")
@@ -48,14 +49,22 @@ if __name__=="__main__":
     if 'hfunc' in mw.column_names():
         mw.rename(names={'hfunc': 'function'}, inplace=True)
 
-    logging.info(f"Reading labels from {args.labels}")
-    labels = pd.read_csv(args.labels, index_col=0)
-    classifier = lambda x: int(labels.loc[x]['malware_label'])
-
-    napks = mw['apk'].unique().to_numpy()
-    logging.info(f"Got: {napks.shape[0]} apks")
     
-    net = f_create_network(data=mw, gamma=args.gamma)
+    #logging.info(f"Reading labels from {args.labels}")
+    #labels = pd.read_csv(args.labels, index_col=0)
+    #classifier = lambda x: int(labels.loc[x]['malware_label'])
+
+    #napks = mw['apk'].unique().to_numpy()
+    #logging.info(f"Got: {napks.shape[0]} apks")
+
+    gamma = args.gamma 
+    if gamma > 1.0:
+        gamma = gamma/10.0
+
+    logging.info(f"Stargng network calculation for gamma={gamma}")
+    
+    
+    net = f_create_network(data=mw, gamma=gamma)
     #voting = convert_to_voting(net, classifier)
     save_nets({args.gamma: [net]}, f"{args.gamma}-{args.p}-tc-nets",  directory=ww)
     logging.info(f"Network with {len(net)} anchors saved ")

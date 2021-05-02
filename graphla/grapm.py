@@ -13,6 +13,7 @@ from functools import partial
 from multiprocessing import Pool
 import pickle
 import os
+import logging
 
 def save_nets(nets, name, directory='../res/'):
     #normal_nets = dict()
@@ -90,6 +91,7 @@ def merge_voting_nets(nets, datas, gamma):
 def old_f_create_network(data, gamma):
     apks = data['apk'].unique()
     k = apks.shape[0]
+    logging.info(f"Starting network calculaiton with k={k}")
     sim_recom = tc.item_similarity_recommender.create(data, 
                                                       user_id='function', 
                                                       item_id='apk', 
@@ -131,6 +133,7 @@ def old_f_create_network(data, gamma):
 def f_create_network(data, gamma):
     apks = data['apk'].unique()
     k = apks.shape[0]
+    
     sim_recom = tc.item_similarity_recommender.create(data, 
                                                       user_id='function', 
                                                       item_id='apk', 
