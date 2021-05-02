@@ -35,15 +35,15 @@ def get_over_distances(net, items, gamma):
 
 
 if __name__=="__main__":
-    mw = tc.load_sframe('../binarydata/funcs-encoded')
-    mw = mw.remove_column('fcount', inplace=True)
+    mwx = tc.load_sframe('../binarydata/funcs-encoded')
+    mwx = mwx.remove_column('fcount', inplace=True)
     
-    net_file_name = '../res/merged-th15_merged.pickle'
+    net_file_name = '../res/newrad/merged.pickle' #'../res/merged-th15_merged.pickle'
     print(f"Reading in nets from {net_file_name}")
     with open(net_file_name, 'rb') as f:
         allthenet = pickle.load(f)
 
-    items = setup_items(data=mw)
+    items = setup_items(data=mwx)
 
     distances = dict()
     for gamma, net in tqdm(allthenet.items()):
