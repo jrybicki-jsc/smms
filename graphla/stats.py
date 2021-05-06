@@ -25,7 +25,7 @@ if __name__=="__main__":
     tc.config.set_runtime_config('TURI_DEFAULT_NUM_PYLAMBDA_WORKERS', 4)
 
     mw = load_functions_partition(args=args)
-    logging.info(f"Read {mw.num_rows} rows")
+    logging.info(f"Read {mw.num_rows()} rows")
 
     ags = mw.groupby(key_column_names='apk', operations={'fcount': agg.COUNT()})
     ags.save(f"{path}/apks.csv", format='csv')
