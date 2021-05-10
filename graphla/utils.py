@@ -4,9 +4,9 @@ import os
 import datetime
 import pathlib
 
-def load_functions_partition(args):
-    logging.info(f"Loading functions from {args.functions}{args.p}")
-    mw =  tc.load_sframe(f"{args.functions}{args.p}")
+def load_functions_partition(directory, name):
+    logging.info(f"Loading functions from {directory}{name}")
+    mw =  tc.load_sframe(f"{directory}{name}")
     if 'fcount' in mw.column_names():
         mw.remove_column('fcount', inplace=True)
 
