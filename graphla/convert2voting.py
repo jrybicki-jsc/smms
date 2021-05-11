@@ -29,11 +29,12 @@ if __name__=="__main__":
     classifier = lambda x: int(labels.loc[x]['malware_label'])
 
     #0.86-0-tc-nets.pickle
-    with open(f"{args.nets}-{args.p}-tc-nets.pickle", 'rb') as f:
+    with open(f"{args.nets}{args.p}-tc-nets.pickle", 'rb') as f:
         net = pickle.load(f)
 
+    net = list(net.values())[0][0]
     voting = convert_to_voting(net, classifier)
     # args.nets will include path so we trick it with directory =''
-    save_nets({args.gamma: [voting]}, f"{args.nets}-{args.p}-voting-net",  directory='')
+    save_nets({0.0: [voting]}, f"{args.nets}-{args.p}-voting-net",  directory='')
     logging.info(f"Voting network with {len(voting)} anchors saved ")
     
