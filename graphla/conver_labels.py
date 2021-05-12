@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 import pandas as pd
 import argparse
+import hashlib
 
-
+def calc_hash(x, digits=12):
+    return int(hashlib.sha1(x.upper().encode("utf-8")).hexdigest(), 16) % (10 ** digits)
 
 if __name__ =="__main__":
     parser = argparse.ArgumentParser(description='Convert labels file.')
@@ -14,7 +16,7 @@ if __name__ =="__main__":
     labels = pd.read_csv(args.input)
     print(labels.head())
 
-    labels['hapk']=labels['apk'].apply(lambda x: hash(str.upper(x)))
+    labels['hapk']=labels['apk'].apply(calc_hash)
     labels.drop(columns=['apk'], inplace=True)
     r = labels.rename(columns={'hapk': 'apk'}).set_index('apk')
 
