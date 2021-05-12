@@ -23,8 +23,18 @@ if __name__=="__main__":
     labels = pd.read_csv(args.labels, index_col=0)
     
     logging.info(f"Loading functions from {args.functions}")
-    mw2 = tc.load_sframe(args.functions)
-    apks = mw2['apk'].unique()
+    mw = tc.load_sframe(args.functions)
+    if 'fcount' in mw.column_names():
+        mw.remove_column('fcount', inplace=True)
+
+    if 'hapk' in mw.column_names():
+        mw.rename(names={'hapk': 'apk'}, inplace=True)
+
+    if 'hfunc' in mw.column_names():
+        mw.rename(names={'hfunc': 'function'}, inplace=True)
+
+    mw.save(f"{args.output}/better.large")
+    apks = mw['apk'].unique()
 
     apkout = f"{args.output}/apks/"
     logging.info(f"Saving apks to {apkout}")
