@@ -43,6 +43,7 @@ def merge_voting_nets(nets, datas, gamma):
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description='Merge networks')
     parser.add_argument('--nets', help='name of the network directory', required=True)
+    #parser.add_argument('--anchors', hep='name of ')
     parser.add_argument('--p1', help='partition number', type=int, required=True)
     parser.add_argument('--p2', help='partition number', type=int, required=True)
     parser.add_argument('--output', help='output path', required=True)
@@ -55,9 +56,13 @@ if __name__=="__main__":
 
     mw = load_functions_partition(directory=args.functions, name=args.p)
 
-    gamma = args.gamma 
+    gamma = args.gamma
+    if gamma > 10:
+        gamma = gamma/10.0
+
     if gamma > 1.0:
         gamma = gamma/10.0
+
 
     logging.info(f"Loading networks {gamma}")
     networks = list()
@@ -65,15 +70,16 @@ if __name__=="__main__":
     gamma = args.gamma
 
     for i in range(args.p1, args.p2):
-        with open(f"{args.nets}-{i}-voting-net.pickle", 'rb') as f:
+        #0.85-0-voting-net.pickle
+        with open(os.path.join(args.nets, f"{gamma}-{i}-voting-net.pickle"), 'rb') as f:
             net = pickle.load(f)
         networks.append(list(net.values())[0][0])
         g2 = list(net.keys())[0]
         if g2!=gamma:
             logging.warning(f"Found different gamman in network file {i}: {gamma}!={g2}")
             gamma =g2 
-
-        anchorpath = os.path.join(args.nets,f"anchors-{i}")
+        #anchors-0.85-5
+        anchorpath = os.path.join(args.nets,f"anchors-{gamma}-{i}")
         an = tc.load_sframe(anchorpath)
         anchors.append(an)
 
