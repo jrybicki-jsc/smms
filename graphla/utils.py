@@ -18,13 +18,15 @@ def load_functions_partition(directory, name):
 
     return mw
 
+
 def setup_path(args):
     run = datetime.datetime.now().strftime("run-%Y-%m-%d-%R")
     ww = os.path.join(args.output, run)
     pathlib.Path(ww).mkdir(parents=True, exist_ok=True)
     return ww
 
-def setup_logging(path, args):
+def setup_logging(path, parser):
     logging.basicConfig(filename=f"{path}/info.log", filemode='a', level=logging.INFO, format='%(asctime)s %(name)s %(levelname)s %(message)s')
-    logging.info(args)
+    logging.info(parser.description)
+    logging.info(parser.parse_args())
     
