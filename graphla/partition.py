@@ -51,7 +51,3 @@ if __name__=="__main__":
         print(f"Saving to {output}")
         mw.filter_by(values=part, column_name='apk').save(output, format='binary')
     
-    
-
-    
-    

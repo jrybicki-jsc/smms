@@ -30,3 +30,8 @@ def setup_logging(path, parser):
     logging.info(parser.description)
     logging.info(parser.parse_args())
     
+def setup_turi():
+    tc.config.set_runtime_config('TURI_FILEIO_MAXIMUM_CACHE_CAPACITY',5*2147483648)
+    tc.config.set_runtime_config('TURI_FILEIO_MAXIMUM_CACHE_CAPACITY_PER_FILE', 5*134217728)
+    # following can reduce the memory footprint
+    tc.config.set_runtime_config('TURI_DEFAULT_NUM_PYLAMBDA_WORKERS', 4)
