@@ -54,8 +54,6 @@ if __name__=="__main__":
     setup_logging(path=path, parser=parser)
     setup_turi()
 
-    mw = load_functions_partition(directory=args.functions, name=args.p)
-
     gamma = args.gamma
     if gamma > 10:
         gamma = gamma/10.0
@@ -67,7 +65,6 @@ if __name__=="__main__":
     logging.info(f"Loading networks {gamma}")
     networks = list()
     anchors = list()
-    gamma = args.gamma
 
     for i in range(args.p1, args.p2+1):
         #0.85-0-voting-net.pickle
