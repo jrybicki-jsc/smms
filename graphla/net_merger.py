@@ -86,4 +86,5 @@ if __name__=="__main__":
     logging.info(f"Starting to merge {len(networks)} nets with gamma={gamma}")
     r = merge_voting_nets(nets=networks, datas=anchors, gamma=gamma)
     with open(os.path.join(args.output, f"merged-{gamma}-{args.p1}-{args.p2}.pickle"), 'wb+') as f:
-        pickle.dump(r)
+        pickle.dump(r, f)
+    logging.info(f"Saved network with {len(r)}")
