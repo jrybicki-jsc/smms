@@ -35,7 +35,7 @@ if __name__=="__main__":
     networks = list()
     for i in range(args.p1, args.p2+1):
         #0.85-0-voting-net.pickle
-        with open(os.path.join(args.nets, f"{gamma}-{i}-voting-net.pickle"), 'rb') as f:
+        with open(os.path.join(args.nets, f"{gamma}-streamed-{i}.pickle"), 'rb') as f:
             net = pickle.load(f)
         networks.append(list(net.values())[0][0])
         g2 = list(net.keys())[0]
