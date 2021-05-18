@@ -16,16 +16,17 @@ def s_conver_to_probs(v):
 def eval_net(net, anchors, data):
     #tc_based_nn(net, anchors, partition):
     nns = tc_based_nn(net=net, anchors=anchors, partition=data)
-    return [s_conver_to_probs(net[row['nn']]) for row in nns.sort('apk')]
+    logging.info('Network done')
+    return [(row, s_conver_to_probs(net[row['nn']])) for row in nns.sort('apk')]
     
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Process networks.')
+    parser = argparse.ArgumentParser(description='Eval networks.')
     parser.add_argument('--net', help='name of the network file', required=True)
     parser.add_argument('--anchors', help='network anchor file', required=True)
     parser.add_argument('--test-file', help='name of the test file', required=True)
     parser.add_argument('--labels', help='name of the labels file', required=True)
-    parser.add_argument('--out', help='name of the output', default='res/out.pickle')
+    parser.add_argument('--output', help='name of the output', default='res/out.pickle')
     args = parser.parse_args()
 
     path = setup_path(args)
@@ -51,8 +52,10 @@ if __name__ == "__main__":
     logging.info('Setting true values')
     true_values = [not labels.loc[a]['malware_label'] for a in test_apns]
 
+    logging.info('Starting evaluation')
     res= [eval_net(net=net, anchors=an, data=test), true_values]
         
-    with open(args.out, 'wb+') as f:
+    logging.info('Storing results')
+    with open(f"evalresults.pickle", 'wb+') as f:
         pickle.dump(res, f)
 
