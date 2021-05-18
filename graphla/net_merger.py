@@ -67,8 +67,8 @@ if __name__=="__main__":
     anchors = list()
 
     for i in range(args.p1, args.p2+1):
-        #0.85-0-voting-net.pickle
-        with open(os.path.join(args.nets, f"{gamma}-{i}-voting-net.pickle"), 'rb') as f:
+        #0.85-0-tc-nets-voting.pickle
+        with open(os.path.join(args.nets, f"{gamma}-{i}-tc-nets-voting.pickle"), 'rb') as f:
             net = pickle.load(f)
         networks.append(list(net.values())[0][0])
         g2 = list(net.keys())[0]
