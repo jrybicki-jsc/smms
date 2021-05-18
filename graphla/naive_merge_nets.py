@@ -52,5 +52,5 @@ if __name__=="__main__":
     for d in networks:
         merged = naive_merge(merged, d)
     
-    save_nets({gamma: [net]}, f"merged-{gamma}-{args.orgin}-tc-nets",  directory=path)
+    save_nets({gamma: [merged]}, f"merged-{gamma}-{args.origin}-tc-nets",  directory=path)
     logging.info(f"Saved network with {len(merged)}")
