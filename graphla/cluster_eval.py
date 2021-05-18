@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 # cluster eval 
 import pickle
-import pandas as pd 
 import logging
 import argparse
 import turicreate as tc
-from streamed import tc_based_nn
-import numpy as np
 from utils import setup_path, setup_logging
 from stream_net import tc_based_nn
 
@@ -21,11 +18,10 @@ def eval_net(net, anchors, data):
     
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Eval networks.')
+    parser = argparse.ArgumentParser(description='Eval network')
     parser.add_argument('--net', help='name of the network file', required=True)
     parser.add_argument('--anchors', help='network anchor file', required=True)
     parser.add_argument('--test-file', help='name of the test file', required=True)
-    parser.add_argument('--labels', help='name of the labels file', required=True)
     parser.add_argument('--output', help='name of the output', default='res/out.pickle')
     args = parser.parse_args()
 
@@ -35,27 +31,16 @@ if __name__ == "__main__":
     logging.info(f"Loading origin network {args.net} & {args.anchors}")
     with open(args.net, 'rb') as f:
         net = pickle.load(f)
-    gamma = list(net.keys())[0]
     net = list(net.values())[0][0]
     an = tc.load_sframe(args.anchors)
 
     logging.info(f"Reading test file: {args.test_file}")
     test = tc.load_sframe(args.test_file)
-    test_apns = list(test['apk'].unique())
-    #think about sorting 
-    test_apns.sort()
-
-    logging.info(f"Reading labels from {args.labels}")
-    labels = pd.read_csv(args.labels, index_col=0)
-    classifier = lambda x: int(labels.loc[x]['malware_label'])
     
-    logging.info('Setting true values')
-    true_values = [not labels.loc[a]['malware_label'] for a in test_apns]
-
     logging.info('Starting evaluation')
-    res= [eval_net(net=net, anchors=an, data=test), true_values]
+    res= eval_net(net=net, anchors=an, data=test)
         
     logging.info('Storing results')
-    with open(f"evalresults.pickle", 'wb+') as f:
+    with open(f"{args.output}/evalresults.pickle", 'wb+') as f:
         pickle.dump(res, f)
 
