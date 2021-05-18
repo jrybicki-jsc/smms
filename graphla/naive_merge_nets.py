@@ -8,6 +8,8 @@ import turicreate as tc
 from streamed import naive_merge
 from utils import (load_functions_partition, setup_logging, setup_path,
                    setup_turi)
+from grapm import save_nets
+
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description='Naive merge networks')
@@ -34,7 +36,6 @@ if __name__=="__main__":
     logging.info(f"Loading networks {gamma}")
     networks = list()
     for i in range(args.p1, args.p2+1):
-        #0.85-0-voting-net.pickle
         with open(os.path.join(args.nets, f"{gamma}-streamed-{i}.pickle"), 'rb') as f:
             net = pickle.load(f)
         networks.append(list(net.values())[0][0])
@@ -51,6 +52,5 @@ if __name__=="__main__":
     for d in networks:
         merged = naive_merge(merged, d)
     
-    with open(os.path.join(args.output, f"naive-merged-{gamma}-{args.p1}-{args.p2}.pickle"), 'wb+') as f:
-        pickle.dump(merged, f)
+    save_nets({gamma: [net]}, f"merged-{gamma}-{args.orgin}-tc-nets",  directory=path)
     logging.info(f"Saved network with {len(merged)}")
