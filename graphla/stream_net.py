@@ -17,7 +17,10 @@ def tc_based_nn(net, anchors, partition):
     #allt = data.filter_by(values=anch, column_name='apk')
     allt = anchors.append(partition)
 
-    m = len(allt.shape[0]) # overdoing it here a little?
+    #m = allt.shape[0] # overdoing it here a little?
+    m = 20 * len(net)
+    logging.info(f"Setting topk to {m}")
+    
     sim_recom = tc.item_similarity_recommender.create(
         allt, 
         user_id='function', 
@@ -66,3 +69,5 @@ if __name__=="__main__":
     logging.info('Saving')
     save_nets({gamma: [true_dicts]}, f"{gamma}-streamed-{args.p}",  directory=path)
     logging.info(f"Saved network with {len(true_dicts)}")
+    # probably also save the origin network but I don't want to do it 15 times...
+    save_nets({gamma: [net]}, f"{gamma}-streamed-0",  directory=path)

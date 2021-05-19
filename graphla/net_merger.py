@@ -82,5 +82,5 @@ if __name__=="__main__":
 
     logging.info(f"Starting to merge {len(networks)} nets with gamma={gamma}")
     r = merge_voting_nets(nets=networks, datas=anchors, gamma=gamma)
-    save_nets({gamma: [r]}, f"merged-{gamma}-{args.origin}-tc-nets",  directory=path)
+    save_nets({gamma: [r]}, f"merged-{gamma}-{args.origin}-voting",  directory=path)
     logging.info(f"Saved network with {len(r)}")

@@ -31,6 +31,7 @@ if __name__ == "__main__":
     logging.info(f"Loading origin network {args.net} & {args.anchors}")
     with open(args.net, 'rb') as f:
         net = pickle.load(f)
+    gamma = list(net.keys())[0]
     net = list(net.values())[0][0]
     an = tc.load_sframe(args.anchors)
 
@@ -41,6 +42,5 @@ if __name__ == "__main__":
     res= eval_net(net=net, anchors=an, data=test)
         
     logging.info('Storing results')
-    with open(f"{args.output}/evalresults.pickle", 'wb+') as f:
+    with open(f"{path}/{gamma}-evalresults.pickle", 'wb+') as f:
         pickle.dump(res, f)
-
