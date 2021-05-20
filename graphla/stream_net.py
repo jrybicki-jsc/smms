@@ -10,7 +10,7 @@ import turicreate as tc
 import turicreate.aggregate as agg
 from grapm import save_nets
 from utils import (load_functions_partition, setup_logging, setup_path,
-                   setup_turi)
+                   setup_turi, load_net)
 
 
 def tc_based_nn(net, anchors, partition):
@@ -42,7 +42,7 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(description='Stream networks')
     parser.add_argument('--net', help='orgin net', required=True)
     parser.add_argument('--anchors', help='orgin anchors', required=True)
-    parser.add_argument('--functions', help='name of the input functions', required=True)
+    parser.add_argument('--functions', help='name of the input functions partition', required=True)
     parser.add_argument('--p', help='partition number', type=int, required=True)
     parser.add_argument('--output', help='output path', required=True)
     args = parser.parse_args()
@@ -52,10 +52,7 @@ if __name__=="__main__":
     setup_turi()
 
     logging.info(f"Loading origin network {args.net} & {args.anchors}")
-    with open(args.net, 'rb') as f:
-        net = pickle.load(f)
-    gamma = list(net.keys())[0]
-    net = list(net.values())[0][0]
+    gamma, net = load_net(args.net)
     an = tc.load_sframe(args.anchors)
     
     mw = load_functions_partition(directory=args.functions, name=args.p)
