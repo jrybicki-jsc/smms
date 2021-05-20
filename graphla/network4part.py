@@ -1,19 +1,11 @@
 # spliter
-import numpy as np
-import pandas as pd
-from numpy.random import default_rng
-from sklearn.model_selection import train_test_split
-from tqdm import tqdm
 import turicreate as tc
 import argparse
-import pathlib
-import datetime
 import os
-import datetime
 from grapm import f_create_network, convert_to_voting, save_nets
 import logging
 from streamed import get_anchor_coords
-from utils import setup_logging, setup_path, load_functions_partition
+from utils import setup_logging, setup_path, load_functions_partition, setup_turi
 
 
 if __name__=="__main__":
@@ -27,21 +19,19 @@ if __name__=="__main__":
     path = setup_path(args=args)
     setup_logging(path=path, parser=parser)
 
+    setup_turi()
 
-    tc.config.set_runtime_config('TURI_FILEIO_MAXIMUM_CACHE_CAPACITY',5*2147483648)
-    tc.config.set_runtime_config('TURI_FILEIO_MAXIMUM_CACHE_CAPACITY_PER_FILE', 5*134217728)
-    # following can reduce the memory footprint
-    tc.config.set_runtime_config('TURI_DEFAULT_NUM_PYLAMBDA_WORKERS', 4)
+    gamma = args.gamma
+    if gamma > 10:
+        gamma = gamma/10.0
 
-    mw = load_functions_partition(directory=args.functions, name=args.p)
-
-    gamma = args.gamma 
     if gamma > 1.0:
         gamma = gamma/10.0
 
+
+    mw = load_functions_partition(directory=args.functions, name=args.p)
     logging.info(f"Stargng network calculation for gamma={gamma}")
-    
-    
+        
     net = f_create_network(data=mw, gamma=gamma)
     save_nets({args.gamma: [net]}, f"{args.gamma}-{args.p}-tc-nets",  directory=path)
     logging.info(f"Network with {len(net)} anchors saved ")
