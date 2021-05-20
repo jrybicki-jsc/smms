@@ -11,7 +11,7 @@ from utils import setup_logging, setup_path, load_functions_partition, setup_tur
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description='Calculate network for a partitions')
     parser.add_argument('--functions', help='name of the functions directory', required=True)
-    parser.add_argument('--p', help='partition number', type=int, required=True )
+    parser.add_argument('--p', help='partition number', type=int)
     parser.add_argument('--output', help='output path', required=True)
     parser.add_argument('--gamma', help='gamma', default=.65, type=float)
     args = parser.parse_args()

@@ -7,6 +7,7 @@ import argparse
 import glob 
 import os
 
+
 if __name__ =="__main__":
     parser = argparse.ArgumentParser(description='Binary merger')
     parser.add_argument('--input', help='name of the input path', required=True)
@@ -28,5 +29,7 @@ if __name__ =="__main__":
         print(el, out.shape)
         tm = tc.load_sframe(el)
         out = out.append(tm)
+
+    
 
     out.save(args.output, format='binary')

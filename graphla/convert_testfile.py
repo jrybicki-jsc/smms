@@ -27,9 +27,7 @@ if __name__=="__main__":
 
     logging.info(f"Extracted apn: {len(test_apns)}")
 
-    tc.config.set_runtime_config('TURI_FILEIO_MAXIMUM_CACHE_CAPACITY',15*2147483648)
-    tc.config.set_runtime_config('TURI_FILEIO_MAXIMUM_CACHE_CAPACITY_PER_FILE', 15*134217728)
-    # following can reduce the memory footprint
+    setup_turi()
     tc.config.set_runtime_config('TURI_DEFAULT_NUM_PYLAMBDA_WORKERS', 16)
 
     logging.info('Loading functions')

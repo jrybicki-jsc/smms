@@ -6,6 +6,8 @@ import pathlib
 import pickle
 
 def load_functions_partition(directory, name):
+    if name is None:
+        name = ''
     logging.info(f"Loading functions from {directory}{name}")
     mw =  tc.load_sframe(f"{directory}{name}")
     if 'fcount' in mw.column_names():
