@@ -88,47 +88,6 @@ def merge_voting_nets(nets, datas, gamma):
 
     return targ
 
-def old_f_create_network(data, gamma):
-    apks = data['apk'].unique()
-    k = apks.shape[0]
-    logging.info(f"Starting network calculaiton with k={k}")
-    sim_recom = tc.item_similarity_recommender.create(data, 
-                                                      user_id='function', 
-                                                      item_id='apk', 
-                                                      similarity_type='jaccard', 
-                                                      only_top_k=k, 
-                                                      degree_approximation_threshold=15*4096, 
-                                                      threshold=0.0, verbose=False)
-    itms = sim_recom.get_similar_items(apks, k=k)
-    # missing more "distant nodes", "not aggregating nodes"
-    gw=itms[itms['score']>=1-gamma].groupby(key_column_names='apk', operations={'sims': agg.DISTINCT('similar')})
-    
-    ws = set(gw['apk'])
-    net = dict()
-    already_added = set()
-    while len(ws)>0:
-        w= ws.pop()
-
-        simp = set(gw[gw['apk']==w]['sims'][0])
-        simp = simp - already_added
-
-        net[w] = list(simp)
-        already_added.update(simp)
-        already_added.add(w)
-
-        ws = ws - simp
-    
-    # add solitary nodes & not-aggregating nodes
-    if len(already_added)> 0:
-        nds = apks.filter_by(list(already_added), exclude=True)
-    else:
-        nds = apks
-        
-    for n in nds:
-        net[n] = []
-        
-    return net
-
 
 def f_create_network(data, gamma):
     apks = data['apk'].unique()
