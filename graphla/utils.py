@@ -3,6 +3,7 @@ import turicreate as tc
 import os
 import datetime
 import pathlib
+import pickle
 
 def load_functions_partition(directory, name):
     logging.info(f"Loading functions from {directory}{name}")
@@ -18,6 +19,13 @@ def load_functions_partition(directory, name):
 
     return mw
 
+def load_net(path):
+    logging.info(f"Loading network from {path}")
+    with open(path, 'rb') as f:
+        net = pickle.load(f)
+    gamma = list(net.keys())[0]
+    net = list(net.values())[0][0]
+    return gamma, net
 
 def setup_path(args):
     run = datetime.datetime.now().strftime("run-%Y-%m-%d-%R")

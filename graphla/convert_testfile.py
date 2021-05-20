@@ -3,7 +3,7 @@ import turicreate as tc
 import pickle
 import argparse
 from utils import (load_functions_partition, setup_logging, setup_path,
-                   setup_turi)
+                   setup_turi, load_net)
 import logging
 
 if __name__=="__main__":
@@ -22,9 +22,7 @@ if __name__=="__main__":
     setup_logging(path=path, parser=parser)
     net_file = args.net 
     logging.info(f"Reading reading net file {net_file}")
-    with open(net_file, 'rb') as f:
-        net = pickle.load(f)
-    net = list(net.values())[0][0]
+    gamma, net = load_net(net_file)
     test_apns = list(net.keys())
 
     logging.info(f"Extracted apn: {len(test_apns)}")
