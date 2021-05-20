@@ -6,7 +6,7 @@ import turicreate as tc
 from utils import setup_path, setup_logging, load_functions_partition
 
 if __name__=="__main__":
-    parser = argparse.ArgumentParser(description='Merge partitions')
+    parser = argparse.ArgumentParser(description='Concatinate partitions')
     parser.add_argument('--functions', help='name of the functions directory', required=True)
     parser.add_argument('--p1', help='partition number', type=int, required=True)
     parser.add_argument('--p2', help='partition number', type=int, required=True)
