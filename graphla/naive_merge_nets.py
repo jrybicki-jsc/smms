@@ -7,7 +7,7 @@ import pickle
 import turicreate as tc
 from streamed import naive_merge
 from utils import (load_functions_partition, setup_logging, setup_path,
-                   setup_turi)
+                   setup_turi, load_net)
 from grapm import save_nets
 
 
@@ -36,13 +36,15 @@ if __name__=="__main__":
     logging.info(f"Loading networks {gamma}")
     networks = list()
     for i in range(args.p1, args.p2+1):
-        with open(os.path.join(args.nets, f"{gamma}-streamed-{i}.pickle"), 'rb') as f:
-            net = pickle.load(f)
-        networks.append(list(net.values())[0][0])
-        g2 = list(net.keys())[0]
+        p = os.path.join(args.nets, f"{gamma}-streamed-{i}.pickle")
+        g2, net = load_net(p)
+        networks.append(net)
         if g2!=gamma:
-            logging.warning(f"Found different gamman in network file {i}: {gamma}!={g2}")
-            gamma =g2 
+            logging.warning(f"Found different gamma in network file {i}: {gamma}!={g2}")
+            gamma =g2
+
+    sizes = [len(net) for net in networks]
+    logging.info(f"Network sizes: {sizes}")
 
     origin_net = networks[args.origin]
     del networks[args.origin]
