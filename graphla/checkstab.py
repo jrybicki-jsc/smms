@@ -33,7 +33,7 @@ if __name__=="__main__":
     nets = dict()
     intervals = 18
 #    for gamma in tqdm([x * 1/intervals for x in range(0, intervals+1)]):
-    gamma = 0.6666666666666666
+    gamma = 0.65
     print(f"Current {gamma=}")
    
     for p in range(0, len(parts)):

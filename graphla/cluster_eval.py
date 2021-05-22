@@ -4,7 +4,7 @@ import pickle
 import logging
 import argparse
 import turicreate as tc
-from utils import setup_path, setup_logging
+from utils import setup_path, setup_logging, load_net
 from stream_net import tc_based_nn
 
 def s_conver_to_probs(v):
@@ -28,18 +28,14 @@ if __name__ == "__main__":
     path = setup_path(args)
     setup_logging(path=path, parser=parser)
 
-    logging.info(f"Loading origin network {args.net} & {args.anchors}")
-    with open(args.net, 'rb') as f:
-        net = pickle.load(f)
-    gamma = list(net.keys())[0]
-    net = list(net.values())[0][0]
+    gamma, net = load_net(args.net)
     an = tc.load_sframe(args.anchors)
 
     logging.info(f"Reading test file: {args.test_file}")
     test = tc.load_sframe(args.test_file)
     
     logging.info('Starting evaluation')
-    res= eval_net(net=net, anchors=an, data=test)
+    res = eval_net(net=net, anchors=an, data=test)
         
     logging.info('Storing results')
     with open(f"{path}/{gamma}-evalresults.pickle", 'wb+') as f:

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 #print nets stats
 import glob
 from utils import load_net
@@ -8,7 +9,7 @@ if __name__=="__main__":
         try:
             g2, net = load_net(fname)
             print(f"{fname} gamma={g2} size: {len(net)}")
-        finally:
+        except:
             print(f"Unable to load net from {fname}")
 
         

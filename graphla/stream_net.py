@@ -33,9 +33,10 @@ def tc_based_nn(net, anchors, partition):
     apks = partition['apk'].unique()
     items =sim_recom.get_similar_items(apks, k=m)
     # recomendations excluding network anchors 
-    fitems = items.filter_by(values=apks, column_name='similar', exclude=True)
+    fitems = items.filter_by(values=list(net.keys()), column_name='similar')
     
-    return fitems.groupby(key_column_names=['apk'], operations={'nn': tc.aggregate.ARGMAX('score', 'similar')})
+    return fitems.groupby(key_column_names=['apk'], 
+                          operations={'nn': tc.aggregate.ARGMAX('score', 'similar')})
 
 
 if __name__=="__main__":
