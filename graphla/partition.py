@@ -15,7 +15,7 @@ if __name__=="__main__":
     parser.add_argument('--p', help='number of partitions', default=4, type=int)
     parser.add_argument('--test', help='size (or proportion) of test part', default=1000, type=float)
     parser.add_argument('--output', help='output path', required=True)
-    parser.add_argument('--seed', help='random seed', default=42)
+    parser.add_argument('--seed', help='random seed', default=42, type=int)
     args = parser.parse_args()
     path = setup_path(args)
     setup_logging(path=path, parser=parser)
