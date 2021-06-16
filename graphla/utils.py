@@ -29,8 +29,12 @@ def load_net(path):
     net = list(net.values())[0][0]
     return gamma, net
 
-def setup_path(args):
-    run = datetime.datetime.now().strftime("run-%Y-%m-%d-%R")
+def setup_path(args, time: bool=True):
+    if time:
+        run = datetime.datetime.now().strftime("run-%Y-%m-%d-%R")
+    else:
+        run =''
+    
     ww = os.path.join(args.output, run)
     pathlib.Path(ww).mkdir(parents=True, exist_ok=True)
     return ww
