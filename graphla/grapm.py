@@ -156,8 +156,8 @@ def f_create_network(data, gamma):
     return net
 
 
-def partition_ndframe(nd, n_parts):
-    rn = default_rng(42)
+def partition_ndframe(nd, n_parts, seed=42):
+    rn = default_rng(seed=seed)
     permuted_indices = rn.permutation(len(nd))
 
     dfs = []
