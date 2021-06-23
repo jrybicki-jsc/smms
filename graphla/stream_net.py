@@ -32,7 +32,7 @@ def tc_based_nn(net, anchors, partition):
     # smaller k could be an optimization here
     apks = partition['apk'].unique()
     items =sim_recom.get_similar_items(apks, k=m)
-    # recomendations excluding network anchors 
+    # recomendations excluding network anchors (apk, exclude)
     fitems = items.filter_by(values=list(net.keys()), column_name='similar')
     
     return fitems.groupby(key_column_names=['apk'], 
@@ -54,12 +54,16 @@ if __name__=="__main__":
 
     logging.info(f"Loading origin network {args.net} & {args.anchors}")
     gamma, net = load_net(args.net)
+
+    logging.info('Loading anchors')
     an = tc.load_sframe(args.anchors)
-    
+
+    logging.info('Loading paritiion')
     mw = load_functions_partition(directory=args.functions, name=args.p)
 
     logging.info('Nearest neigbour search')
     neigh = tc_based_nn(net=net, anchors=an, partition= mw)
+    
     logging.info('Conversion')
     dicted = neigh.groupby(key_column_names='nn', operations={'nodes': agg.DISTINCT('apk')})
     true_dicts = {row['nn']: row['nodes'] for row in dicted}
@@ -67,5 +71,4 @@ if __name__=="__main__":
     logging.info('Saving')
     save_nets({gamma: [true_dicts]}, f"{gamma}-streamed-{args.p}",  directory=path)
     logging.info(f"Saved network with {len(true_dicts)}")
-    # probably also save the origin network but I don't want to do it 15 times...
-    save_nets({gamma: [net]}, f"{gamma}-streamed-0",  directory=path)
+    
