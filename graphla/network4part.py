@@ -1,12 +1,11 @@
-# spliter
-import turicreate as tc
 import argparse
-import os
-from grapm import f_create_network, convert_to_voting, save_nets
 import logging
-from streamed import get_anchor_coords
-from utils import setup_logging, setup_path, load_functions_partition, setup_turi
+import os
 
+from grapm import f_create_network, save_nets
+from streamed import get_anchor_coords
+from utils import (load_functions_partition, setup_logging, setup_path,
+                   setup_turi)
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description='Calculate network for a partitions')
@@ -31,7 +30,7 @@ if __name__=="__main__":
 
     mw = load_functions_partition(directory=args.functions, name=args.p)
     logging.info(f"Stargng network calculation for gamma={gamma}")
-        
+
     net = f_create_network(data=mw, gamma=gamma)
     save_nets({args.gamma: [net]}, f"{args.gamma}-{args.p}-tc-nets",  directory=path)
     logging.info(f"Network with {len(net)} anchors saved ")
@@ -40,4 +39,3 @@ if __name__=="__main__":
     pp = os.path.join(path, f"anchors-{args.p}")
     anchors.save(pp, format='binary')
     logging.info(f"Anchor cords saved in {pp}")
-
