@@ -8,6 +8,8 @@ from streamed import get_anchor_coords
 from utils import (load_functions_partition, setup_logging, setup_path,
                    setup_turi)
 
+from net_strip import strip_net
+
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description='Lited Calculate network for a partitions')
     parser.add_argument('--functions', help='name of the functions directory', required=True)
@@ -39,3 +41,10 @@ if __name__=="__main__":
         pp = os.path.join(path, f"anchors-{args.p}")
         anchors.save(pp, format='binary')
         logging.info("Anchor cords saved in %s", pp)
+
+        st = strip_net(net)
+        if args.output:
+            save_nets({t_gamma: [st]}, "stripped",  directory=args.output)
+        else:
+            fname = args.net.replace('.pickle', '-stripped')
+            save_nets({t_gamma: [st]}, fname,  directory='')
