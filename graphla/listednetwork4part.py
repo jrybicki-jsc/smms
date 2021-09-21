@@ -39,10 +39,9 @@ if __name__=="__main__":
         logging.info("Network with %d anchors saved ", len(net))
 
         anchors = get_anchor_coords(net=net, data=mw)
-        pp = os.path.join(path, f"anchors-{args.p}")
+        pp = os.path.join(path, f"anchors-{t_gamma}-{args.p}")
         anchors.save(pp, format='binary')
         logging.info("Anchor cords saved in %s", pp)
 
         st = strip_net(net)
-        fname = args.net.replace('.pickle', '-stripped')
         save_nets({t_gamma: [st]}, f"{t_gamma}-{args.p}-tc-nets-stripped",  directory=path)
