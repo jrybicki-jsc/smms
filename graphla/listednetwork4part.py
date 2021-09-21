@@ -18,7 +18,7 @@ if __name__=="__main__":
     parser.add_argument('--list', nargs='+', help='Gamma list', required=True)
     args = parser.parse_args()
 
-    path = setup_path(args=args)
+    path = setup_path(args=args, time=False)
     setup_logging(path=path, parser=parser)
 
     setup_turi()
@@ -44,8 +44,5 @@ if __name__=="__main__":
         logging.info("Anchor cords saved in %s", pp)
 
         st = strip_net(net)
-        if args.output:
-            save_nets({t_gamma: [st]}, "stripped",  directory=args.output)
-        else:
-            fname = args.net.replace('.pickle', '-stripped')
-            save_nets({t_gamma: [st]}, fname,  directory='')
+        fname = args.net.replace('.pickle', '-stripped')
+        save_nets({t_gamma: [st]}, f"{t_gamma}-{args.p}-tc-nets-stripped",  directory=path)
