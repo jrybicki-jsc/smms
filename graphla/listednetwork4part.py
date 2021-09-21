@@ -26,6 +26,7 @@ if __name__=="__main__":
 
     for gamma in args.list:
         t_gamma = gamma
+        gamma = float(gamma)
         if gamma > 10:
             gamma = gamma/10.0
 
