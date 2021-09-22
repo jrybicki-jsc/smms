@@ -37,8 +37,8 @@ if __name__=="__main__":
         if gamma > 1.0:
             gamma = gamma/10.0
 
-        pp = os.path.join(args.dir, f"anchors-{args.p}")
-        nn = os.path.join(args.dir, f"{t_gamma}-{args.p}-tc-nets")
+        pp = os.path.join(args.dir, f"anchors-{t_gamma}-0")
+        nn = os.path.join(args.dir, f"{t_gamma}-0-tc-nets-stripped")
 
         logging.info(f"Loading origin network from {args.dir} {nn} & {pp}")
         _, net = load_net(nn)
